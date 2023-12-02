@@ -13,8 +13,9 @@ INPUT_DIR = REPO_ROOT / "input"
 
 
 class AnswerEntry(NamedTuple):
+    """Info on a days answer."""
     module_name: str
-    function_name: str
+    function_name: str | None
     is_example: bool
     input_file: Path
     expected_result: tuple[Any]
@@ -23,7 +24,7 @@ class AnswerEntry(NamedTuple):
         return f"{self.module_name}-{'example' if self.is_example else 'real':7s}"
 
 
-def get_all_days(examples: bool) -> list[AnswerEntry]:
+def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]:
     inputs_seen = set()
     day_parts = []
     for (
@@ -50,13 +51,14 @@ def get_all_days(examples: bool) -> list[AnswerEntry]:
                 )
             )
 
-    # Now check for any inputs that we don't have answers for yet
-    sub_dir = "examples" if examples else "real"
-    for input_file in (INPUT_DIR / sub_dir).glob("**/*"):
-        if input_file not in inputs_seen:
-            day_parts.append(
-                AnswerEntry(input_file.name[:3], "", examples, input_file, (None,))
-            )
+    if not needs_answer:
+        # Check for any inputs that we don't have answers for yet
+        sub_dir = "examples" if examples else "real"
+        for input_file in (INPUT_DIR / sub_dir).glob("**/*"):
+            if input_file not in inputs_seen:
+                day_parts.append(
+                    AnswerEntry(input_file.name[:3], None, examples, input_file, (None,))
+                )
 
     return day_parts
 
@@ -96,7 +98,7 @@ def per_day_main(part_function: Any) -> None:
     def _get_day_info(day: str) -> list[AnswerEntry]:
         day_info = []
         for example in (True, False):
-            for entry in get_all_days(example):
+            for entry in get_all_days(example, needs_answer=False):
                 if entry.module_name == day:
                     day_info.append(entry)
         return day_info
@@ -119,10 +121,13 @@ def per_day_main(part_function: Any) -> None:
         process_result(answer, result)
 
 
-def run_all() -> None:
+def _run_all() -> None:
     timing_data = []
     test_calls = []
     for answer in get_all_days(False):
+        if answer.function_name is None:
+            # We don't have the answer for this yet
+            continue
         day_mod = importlib.__import__(answer.module_name)
         part_function = getattr(day_mod, answer.function_name)
         ti = timeit.Timer(lambda: part_function(answer.input_file))
@@ -147,4 +152,4 @@ def run_all() -> None:
 
 
 if __name__ == "__main__":
-    run_all()
+    _run_all()
