@@ -4,11 +4,9 @@ Advent Of Code 2023 Day 01
 
 from __future__ import annotations
 
-
 from pathlib import Path
 
 import utils
-
 
 DIGIT_WORDS = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
 WORD_TO_DIGIT = {word: str(idx + 1) for idx, word in enumerate(DIGIT_WORDS)}

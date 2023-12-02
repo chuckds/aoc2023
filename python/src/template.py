@@ -4,7 +4,6 @@ Advent Of Code 2023 Day XXX
 
 from __future__ import annotations
 
-
 from pathlib import Path
 
 import utils

@@ -4,7 +4,6 @@ Advent Of Code 2023 Day 02
 
 from __future__ import annotations
 
-
 import math
 from pathlib import Path
 from typing import NamedTuple

@@ -5,17 +5,24 @@ set -e
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
+# Create virtualenv and install dependencies
+function venv {
+    [ ! -d "venv" ] && python3.12 -m venv venv
+    venv/bin/pip install --upgrade pip
+    venv/bin/pip install -r requirements.txt
+}
 
 function initrepo {
     ln -s ${REPO_ROOT}/Taskfile ${REPO_ROOT}/.git/hooks/pre-commit
+    venv
 }
 
 function check {
     echo "Run Taskfile help to see other task you can run"
     echo "Running the default precommit checks"
-    mypy --strict ${REPO_ROOT}/python/src/*.py
-    ruff check python/src/
-    pytest ${REPO_ROOT}/python/src
+    venv/bin/mypy --strict ${REPO_ROOT}/python/src/*.py
+    venv/bin/ruff check python/src/
+    venv/bin/pytest ${REPO_ROOT}/python/src
 }
 
 function newday {
@@ -47,7 +54,12 @@ function newday {
 }
 
 function fmt {
-    black python/src
+    venv/bin/black python/src
+    venv/bin/isort --profile black python/src
+}
+
+function rufffmt {
+    venv/bin/ruff format python/src  # TBD if this replaces black
 }
 
 function timeday {
@@ -58,7 +70,7 @@ function timeday {
 
     DAY=$1
     pushd ${REPO_ROOT}/python/src
-    python3 -m timeit "import ${DAY}; ${DAY}.p1p2(${DAY}.utils.real_input('${DAY}'))"
+    venv/bin/python3 -m timeit "import ${DAY}; ${DAY}.p1p2(${DAY}.utils.real_input('${DAY}'))"
     popd
 }
 
@@ -70,18 +82,18 @@ function qtimeday {
 
     DAY=$1
     pushd ${REPO_ROOT}/python/src
-    time python3 -c "import ${DAY}; print(${DAY}.p1p2(${DAY}.utils.real_input('${DAY}')))"
+    time venv/bin/python3 -c "import ${DAY}; print(${DAY}.p1p2(${DAY}.utils.real_input('${DAY}')))"
     popd
 }
 
 function timedays {
     pushd ${REPO_ROOT}/python/src
-    python3 -m utils
+    venv/bin/python3 -m utils
     popd
 }
 
 function testdays {
-    pytest --durations=0 -k test_puzzles ${REPO_ROOT}/python/src
+    venv/bin/pytest --durations=0 -k test_puzzles ${REPO_ROOT}/python/src
 }
 
 function help {

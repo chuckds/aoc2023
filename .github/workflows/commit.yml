@@ -14,7 +14,6 @@ jobs:
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
-        pip3 install pytest
         pip3 install ruff
         pip3 install mypy
     - name: MyPy
@@ -23,5 +22,3 @@ jobs:
     - name: Ruff Check
       run: |
         ruff check python/src/
-    - name: Ruff Format
-      run: ruff format python/src

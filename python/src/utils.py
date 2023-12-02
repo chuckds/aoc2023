@@ -1,12 +1,11 @@
 import argparse
-import json
-import inspect
 import importlib
-import timeit
+import inspect
+import json
 import time
+import timeit
 from pathlib import Path
 from typing import Any
-
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 INPUT_DIR = REPO_ROOT / "input"
