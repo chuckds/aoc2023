@@ -24,7 +24,7 @@ digit_subsets_back = {
 def get_calibration_values(lines: list[str], part2: bool) -> list[int]:
     calibration_values = []
     for line in lines:
-        first = last = '0'
+        first = last = "0"
         poss_word = ""
         for char in line:
             if char.isdigit():
@@ -32,8 +32,8 @@ def get_calibration_values(lines: list[str], part2: bool) -> list[int]:
                 break
             elif part2:
                 poss_word += char
-                first = WORD_TO_DIGIT.get(poss_word, '0')
-                if first != '0':
+                first = WORD_TO_DIGIT.get(poss_word, "0")
+                if first != "0":
                     break
                 elif poss_word not in digit_subsets_fwd:
                     for idx in range(1, len(poss_word)):
@@ -49,8 +49,8 @@ def get_calibration_values(lines: list[str], part2: bool) -> list[int]:
                 break
             elif part2:
                 poss_word = char + poss_word
-                last = WORD_TO_DIGIT.get(poss_word, '0')
-                if last != '0':
+                last = WORD_TO_DIGIT.get(poss_word, "0")
+                if last != "0":
                     break
                 elif poss_word not in digit_subsets_back:
                     for idx in range(1, len(poss_word)):

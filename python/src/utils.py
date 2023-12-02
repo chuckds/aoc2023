@@ -35,9 +35,6 @@ def get_all_days(examples: bool) -> list[tuple[str, str, str, str]]:
     return day_parts
 
 
-
-
-
 def _input_path(from_file: str, subdir: str) -> Path:
     day_name = Path(from_file).stem
     return INPUT_DIR / subdir / day_name
@@ -65,6 +62,7 @@ def per_day_main(day: str = "") -> None:
                 if a_day == day:
                     day_info.append((function, input_file, result, example))
         return day_info
+
     day_info = _get_day_info(day)
     day_mod = importlib.__import__(day)
     to_check = []
