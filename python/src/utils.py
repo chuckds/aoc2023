@@ -5,30 +5,33 @@ import json
 import time
 import timeit
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+ANSWER_FILE = REPO_ROOT / "answers.json"
 INPUT_DIR = REPO_ROOT / "input"
 
 
-def get_all_days(examples: bool) -> list[tuple[str, str, str, str]]:
-    with (REPO_ROOT / "answers.json").open() as f:
-        test_answers = json.load(f)
+class AnswerEntry(NamedTuple):
+    module_name: str
+    function_name: str
+    input_file: Path
+    expected_result: Any
 
+    def is_example(self) -> bool:
+        return "example" in str(self.input_file)
+
+
+def get_all_days(examples: bool) -> list[AnswerEntry]:
     day_parts = []
-    for day, function, input_file, expected_result in test_answers:
-        try:
-            expected_result = tuple(expected_result)
-        except TypeError:  # Assume not iterable i.e. just one answer
-            expected_result = expected_result
-        is_example = "example" in input_file
-        if is_example and examples:
+    for fields in json.loads(ANSWER_FILE.read_text()):
+        entry = AnswerEntry(*fields)
+        if isinstance(entry.expected_result, list):
+            entry = entry._replace(expected_result=tuple(entry.expected_result))
+
+        if (entry.is_example() and examples) or (not entry.is_example() and not examples):
             day_parts.append(
-                (day, function, str(INPUT_DIR / input_file), expected_result)
-            )
-        elif not is_example and not examples:
-            day_parts.append(
-                (day, function, str(INPUT_DIR / input_file), expected_result)
+                entry._replace(input_file=INPUT_DIR / entry.input_file)
             )
 
     return day_parts
@@ -54,27 +57,27 @@ def per_day_main(day: str = "") -> None:
     args = parser.parse_args()
     day = day if day else Path(inspect.stack()[1].filename).stem
 
-    def _get_day_info(day: str) -> list[tuple[str, str, Any, bool]]:
+    def _get_day_info(day: str) -> list[AnswerEntry]:
         day_info = []
         for example in (True, False):
-            for a_day, function, input_file, result in get_all_days(example):
-                if a_day == day:
-                    day_info.append((function, input_file, result, example))
+            for entry in get_all_days(example):
+                if entry.module_name == day:
+                    day_info.append(entry)
         return day_info
 
-    day_info = _get_day_info(day)
+    day_answers = _get_day_info(day)
     day_mod = importlib.__import__(day)
     to_check = []
-    for function, input_file, expected_result, example in day_info:
-        if example and args.real or (not example and args.example):
+    for answer in day_answers:
+        if answer.is_example() and args.real or (not answer.is_example() and args.example):
             continue
-        part_function = getattr(day_mod, function)
+        part_function = getattr(day_mod, answer.function_name)
         start = time.perf_counter()
-        result = part_function(INPUT_DIR / input_file)
-        name = "example" if example else "real"
+        result = part_function(answer.input_file)
+        name = "example" if answer.is_example() else "real"
         duration = time.perf_counter() - start
         print(f"{name} = {result} (in {duration:.3f}s)")
-        to_check.append((expected_result, result, name))
+        to_check.append((answer.expected_result, result, name))
     for expected_result, result, name in to_check:
         assert (
             expected_result == result
@@ -84,14 +87,13 @@ def per_day_main(day: str = "") -> None:
 def run_all() -> None:
     timing_data = []
     test_calls = []
-    for day, part, input_file_str, _ in get_all_days(False):
-        day_mod = importlib.__import__(day)
-        part_function = getattr(day_mod, part)
-        input_file = Path(input_file_str)
-        ti = timeit.Timer(lambda: part_function(input_file))
+    for answer in get_all_days(False):
+        day_mod = importlib.__import__(answer.module_name)
+        part_function = getattr(day_mod, answer.function_name)
+        ti = timeit.Timer(lambda: part_function(answer.input_file))
         num_calls, time_taken = ti.autorange()
-        timing_data.append((time_taken / num_calls, num_calls, time_taken, day))
-        test_calls.append((part_function, input_file))
+        timing_data.append((time_taken / num_calls, num_calls, time_taken, answer.module_name))
+        test_calls.append((part_function, answer.input_file))
 
     ALL_COUNT = 1
     all_days = timeit.timeit(

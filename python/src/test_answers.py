@@ -1,20 +1,20 @@
 import importlib
-from pathlib import Path
-from typing import Any
 
 import pytest
-from utils import get_all_days
+from utils import get_all_days, AnswerEntry
 
 
-@pytest.mark.parametrize("day,part,input_file,result", get_all_days(examples=True))
-def test_puzzle_examples(day: str, part: str, input_file: str, result: Any) -> None:
-    day_mod = importlib.__import__(day)
-    part_function = getattr(day_mod, part)
-    assert part_function(Path(input_file)) == result
+def process_answer_entry(entry: AnswerEntry) -> None:
+    day_mod = importlib.__import__(entry.module_name)
+    part_function = getattr(day_mod, entry.function_name)
+    assert part_function(entry.input_file) == entry.expected_result
 
 
-@pytest.mark.parametrize("day,part,input_file,result", get_all_days(examples=False))
-def test_puzzles(day: str, part: str, input_file: str, result: Any) -> None:
-    day_mod = importlib.__import__(day)
-    part_function = getattr(day_mod, part)
-    assert part_function(Path(input_file)) == result
+@pytest.mark.parametrize("entry", get_all_days(examples=True))
+def test_puzzle_examples(entry: AnswerEntry) -> None:
+    process_answer_entry(entry)
+
+
+@pytest.mark.parametrize("entry", get_all_days(examples=False))
+def test_puzzles(entry: AnswerEntry) -> None:
+    process_answer_entry(entry)
