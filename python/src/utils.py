@@ -5,27 +5,18 @@ import importlib
 import timeit
 import time
 from pathlib import Path
-from typing import Any, Iterator
-from contextlib import contextmanager
+from typing import Any
 
 
-input_dir = Path(__file__).parent.parent.parent / "input"
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+INPUT_DIR = REPO_ROOT / "input"
 
 
-@contextmanager
-def showtime(title: str) -> Iterator[None]:
-    st = time.perf_counter()
-    try:
-        yield
-    finally:
-        print(f"{title} took {time.perf_counter() - st:.6f}s")
-
-
-def get_puzzle_info(examples: bool) -> list[tuple[str, str, str, str]]:
-    day_parts = []
-    repo_root = Path(__file__).resolve().parent.parent.parent
-    with (repo_root / "answers.json").open() as f:
+def get_all_days(examples: bool) -> list[tuple[str, str, str, str]]:
+    with (REPO_ROOT / "answers.json").open() as f:
         test_answers = json.load(f)
+
+    day_parts = []
     for day, function, input_file, expected_result in test_answers:
         try:
             expected_result = tuple(expected_result)
@@ -34,37 +25,30 @@ def get_puzzle_info(examples: bool) -> list[tuple[str, str, str, str]]:
         is_example = "example" in input_file
         if is_example and examples:
             day_parts.append(
-                (day, function, str(input_dir / input_file), expected_result)
+                (day, function, str(INPUT_DIR / input_file), expected_result)
             )
         elif not is_example and not examples:
             day_parts.append(
-                (day, function, str(input_dir / input_file), expected_result)
+                (day, function, str(INPUT_DIR / input_file), expected_result)
             )
 
     return day_parts
 
 
-def get_day_info(day: str = "") -> list[tuple[str, str, Any, bool]]:
-    day = day if day else Path(inspect.stack()[1].filename).stem
-    day_info = []
-    for example in (True, False):
-        for a_day, function, input_file, result in get_puzzle_info(example):
-            if a_day == day:
-                day_info.append((function, input_file, result, example))
-    return day_info
 
 
-def input(from_file: str, subdir: str) -> Path:
+
+def _input_path(from_file: str, subdir: str) -> Path:
     day_name = Path(from_file).stem
-    return input_dir / subdir / day_name
+    return INPUT_DIR / subdir / day_name
 
 
 def real_input(day: str = "") -> Path:
-    return input(day if day else inspect.stack()[1].filename, "real")
+    return _input_path(day if day else inspect.stack()[1].filename, "real")
 
 
 def example_input(day: str = "") -> Path:
-    return input(day if day else inspect.stack()[1].filename, "examples")
+    return _input_path(day if day else inspect.stack()[1].filename, "examples")
 
 
 def per_day_main(day: str = "") -> None:
@@ -73,7 +57,15 @@ def per_day_main(day: str = "") -> None:
     parser.add_argument("--real", action="store_true", help="Real only")
     args = parser.parse_args()
     day = day if day else Path(inspect.stack()[1].filename).stem
-    day_info = get_day_info(day)
+
+    def _get_day_info(day: str) -> list[tuple[str, str, Any, bool]]:
+        day_info = []
+        for example in (True, False):
+            for a_day, function, input_file, result in get_all_days(example):
+                if a_day == day:
+                    day_info.append((function, input_file, result, example))
+        return day_info
+    day_info = _get_day_info(day)
     day_mod = importlib.__import__(day)
     to_check = []
     for function, input_file, expected_result, example in day_info:
@@ -81,7 +73,7 @@ def per_day_main(day: str = "") -> None:
             continue
         part_function = getattr(day_mod, function)
         start = time.perf_counter()
-        result = part_function(input_dir / input_file)
+        result = part_function(INPUT_DIR / input_file)
         name = "example" if example else "real"
         duration = time.perf_counter() - start
         print(f"{name} = {result} (in {duration:.3f}s)")
@@ -95,7 +87,7 @@ def per_day_main(day: str = "") -> None:
 def run_all() -> None:
     timing_data = []
     test_calls = []
-    for day, part, input_file_str, _ in get_puzzle_info(False):
+    for day, part, input_file_str, _ in get_all_days(False):
         day_mod = importlib.__import__(day)
         part_function = getattr(day_mod, part)
         input_file = Path(input_file_str)
