@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# Stop on failure
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+
+function initrepo {
+    ln -s ${REPO_ROOT}/Taskfile ${REPO_ROOT}/.git/hooks/pre-commit
+}
+
+function check {
+    echo "Run Taskfile help to see other task you can run"
+    echo "Running the default precommit checks"
+    mypy --strict ${REPO_ROOT}/python/src/*.py
+    ruff check python/src/
+    pytest ${REPO_ROOT}/python/src
+}
+
+function newday {
+    if [ -z "$1" ]; then
+        echo "Specify a day"
+        return 2
+    fi
+
+    RAW_DAY=$1
+    NEW_DAY=$(printf d%02d $RAW_DAY)
+    echo "Get day $RAW_DAY (pretty version $NEW_DAY)"
+
+    # Do NOT commit the real puzzle input - it shouldn't be shared!
+    # Grab the input first so that it fails early if network access is an issue
+    aoc download -I --input-file input/real/${NEW_DAY} --year 2023 --day $RAW_DAY
+    touch ${REPO_ROOT}/input/examples/${NEW_DAY}
+    git add ${REPO_ROOT}/input/examples/${NEW_DAY}
+
+    # Python
+    if [ ! -f ${REPO_ROOT}/python/src/${NEW_DAY}.py ]; then
+        cp ${REPO_ROOT}/python/src/template.py ${REPO_ROOT}/python/src/${NEW_DAY}.py
+        sed -i '' "s/XXX/${RAW_DAY}/" ${REPO_ROOT}/python/src/${NEW_DAY}.py
+        git add ${REPO_ROOT}/python/src/${NEW_DAY}.py
+        code ${REPO_ROOT}/python/src/${NEW_DAY}.py
+    fi
+
+    # Last so that this is the file that has focus
+    code ${REPO_ROOT}/input/examples/${NEW_DAY}
+}
+
+function fmt {
+    black python/src
+}
+
+function timeday {
+    if [ -z "$1" ]; then
+        echo "Specify a day"
+        return 2
+    fi
+
+    DAY=$1
+    pushd ${REPO_ROOT}/python/src
+    python3 -m timeit "import ${DAY}; ${DAY}.p1p2(${DAY}.utils.real_input('${DAY}'))"
+    popd
+}
+
+function qtimeday {
+    if [ -z "$1" ]; then
+        echo "Specify a day"
+        return 2
+    fi
+
+    DAY=$1
+    pushd ${REPO_ROOT}/python/src
+    time python3 -c "import ${DAY}; print(${DAY}.p1p2(${DAY}.utils.real_input('${DAY}')))"
+    popd
+}
+
+function timedays {
+    pushd ${REPO_ROOT}/python/src
+    python3 -m utils
+    popd
+}
+
+function testdays {
+    pytest --durations=0 -k test_puzzles ${REPO_ROOT}/python/src
+}
+
+function help {
+    echo "$0 <task> <args>"
+    echo "Tasks:"
+    compgen -A function | cat -n
+}
+
+TIMEFORMAT="Task completed in %3lR"
+time "${@:-check}"

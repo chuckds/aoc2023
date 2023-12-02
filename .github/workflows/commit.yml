@@ -1,0 +1,27 @@
+name: Commit
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.12
+    - name: Install dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install pytest
+        pip3 install ruff
+        pip3 install mypy
+    - name: MyPy
+      run: |
+        mypy --strict python/src/*.py
+    - name: Ruff Check
+      run: |
+        ruff check python/src/
+    - name: Ruff Format
+      run: ruff format python/src
