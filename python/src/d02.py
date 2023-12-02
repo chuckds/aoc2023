@@ -18,11 +18,7 @@ class GameBallCounts(NamedTuple):
     blue: int = 0
 
     def is_possible(self, limit: GameBallCounts) -> bool:
-        return (
-            self.red <= limit.red
-            and self.green <= limit.green
-            and self.blue <= limit.blue
-        )
+        return all(bc <= lc for bc, lc in zip(self, limit))
 
 
 def get_game_ball_counts(ball_counts: str) -> list[GameBallCounts]:
@@ -43,21 +39,21 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
     ]
 
     p1_limit = GameBallCounts(12, 13, 14)
-    valid_games = []
-    min_colours = []
-    for idx, game_reveals in enumerate(games):
-        if all(game_reveal.is_possible(p1_limit) for game_reveal in game_reveals):
-            valid_games.append(idx + 1)
-        min_colours.append(
-            GameBallCounts(
-                *(
-                    max(gr[idx] for gr in game_reveals)
-                    for idx in range(len(GameBallCounts._fields))
-                )
+    valid_games = [
+        idx + 1
+        for idx, game_reveals in enumerate(games)
+        if all(game_reveal.is_possible(p1_limit) for game_reveal in game_reveals)
+    ]
+    min_colours = [
+        GameBallCounts(
+            *(
+                max(gr[idx] for gr in game_reveals)
+                for idx in range(len(GameBallCounts._fields))
             )
         )
-    powers = [math.prod(gbc) for gbc in min_colours]
-    return (sum(valid_games), sum(powers))
+        for game_reveals in games
+    ]
+    return (sum(valid_games), sum(math.prod(gbc) for gbc in min_colours))
 
 
 if __name__ == "__main__":
