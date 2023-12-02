@@ -15,23 +15,47 @@ INPUT_DIR = REPO_ROOT / "input"
 class AnswerEntry(NamedTuple):
     module_name: str
     function_name: str
+    is_example: bool
     input_file: Path
-    expected_result: Any
+    expected_result: tuple[Any]
 
-    def is_example(self) -> bool:
-        return "example" in str(self.input_file)
+    def result_name(self) -> str:
+        return f"{self.module_name}-{'example' if self.is_example else 'real':7s}"
 
 
 def get_all_days(examples: bool) -> list[AnswerEntry]:
+    inputs_seen = set()
     day_parts = []
-    for fields in json.loads(ANSWER_FILE.read_text()):
-        entry = AnswerEntry(*fields)
-        if isinstance(entry.expected_result, list):
-            entry = entry._replace(expected_result=tuple(entry.expected_result))
+    for (
+        module_name,
+        function_name,
+        is_example,
+        expected_result,
+        *input_file_suffix,
+    ) in json.loads(ANSWER_FILE.read_text()):
+        if isinstance(expected_result, list):
+            expected_result = tuple(expected_result)
+        else:
+            expected_result = (expected_result,)
 
-        if (entry.is_example() and examples) or (not entry.is_example() and not examples):
+        sub_dir = "examples" if is_example else "real"
+        input_file = INPUT_DIR / sub_dir / module_name
+        if input_file_suffix:
+            input_file = input_file.parent / (input_file.name + input_file_suffix[0])
+        inputs_seen.add(input_file)
+        if (is_example and examples) or (not is_example and not examples):
             day_parts.append(
-                entry._replace(input_file=INPUT_DIR / entry.input_file)
+                AnswerEntry(
+                    module_name, function_name, is_example, input_file, expected_result
+                )
+            )
+
+    # Now check for any inputs that we don't have answers for yet
+    sub_dir = "examples" if examples else "real"
+    for input_file in (INPUT_DIR / sub_dir).glob("**/*"):
+        if input_file not in inputs_seen:
+            day_parts.append(
+                AnswerEntry(input_file.name[:3], "", examples, input_file, (None,))
             )
 
     return day_parts
@@ -50,12 +74,24 @@ def example_input(day: str = "") -> Path:
     return _input_path(day if day else inspect.stack()[1].filename, "examples")
 
 
-def per_day_main(day: str = "") -> None:
+def process_result(answer: AnswerEntry, result: Any) -> None:
+    if not isinstance(result, tuple):
+        result = (result,)
+    for part_idx, (expected_result_part, result_part) in enumerate(
+        zip(answer.expected_result, result)
+    ):
+        if expected_result_part is not None:
+            assert (
+                expected_result_part == result_part
+            ), f"{answer.result_name()}-{part_idx} result wrong, expected: {expected_result_part} got {result_part}"
+
+
+def per_day_main(part_function: Any) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--example", action="store_true", help="Example only")
     parser.add_argument("--real", action="store_true", help="Real only")
     args = parser.parse_args()
-    day = day if day else Path(inspect.stack()[1].filename).stem
+    day = Path(inspect.stack()[1].filename).stem
 
     def _get_day_info(day: str) -> list[AnswerEntry]:
         day_info = []
@@ -66,22 +102,21 @@ def per_day_main(day: str = "") -> None:
         return day_info
 
     day_answers = _get_day_info(day)
-    day_mod = importlib.__import__(day)
     to_check = []
+    day_mod: Any = None
     for answer in day_answers:
-        if answer.is_example() and args.real or (not answer.is_example() and args.example):
+        if answer.is_example and args.real or (not answer.is_example and args.example):
             continue
-        part_function = getattr(day_mod, answer.function_name)
+        if answer.function_name:
+            day_mod = importlib.__import__(day) if day_mod is None else day_mod
+            part_function = getattr(day_mod, answer.function_name)
         start = time.perf_counter()
         result = part_function(answer.input_file)
-        name = "example" if answer.is_example() else "real"
         duration = time.perf_counter() - start
-        print(f"{name} = {result} (in {duration:.3f}s)")
-        to_check.append((answer.expected_result, result, name))
-    for expected_result, result, name in to_check:
-        assert (
-            expected_result == result
-        ), f"{day}-{name} result wrong, expected: {expected_result} got {result}"
+        print(f"{answer.result_name()} = {result} (in {duration:.3f}s)")
+        to_check.append((answer, result))
+    for answer, result in to_check:
+        process_result(answer, result)
 
 
 def run_all() -> None:
@@ -92,7 +127,9 @@ def run_all() -> None:
         part_function = getattr(day_mod, answer.function_name)
         ti = timeit.Timer(lambda: part_function(answer.input_file))
         num_calls, time_taken = ti.autorange()
-        timing_data.append((time_taken / num_calls, num_calls, time_taken, answer.module_name))
+        timing_data.append(
+            (time_taken / num_calls, num_calls, time_taken, answer.module_name)
+        )
         test_calls.append((part_function, answer.input_file))
 
     ALL_COUNT = 1
