@@ -14,6 +14,7 @@ INPUT_DIR = REPO_ROOT / "input"
 
 class AnswerEntry(NamedTuple):
     """Info on a days answer."""
+
     module_name: str
     function_name: str | None
     is_example: bool
@@ -57,7 +58,9 @@ def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]
         for input_file in (INPUT_DIR / sub_dir).glob("**/*"):
             if input_file not in inputs_seen:
                 day_parts.append(
-                    AnswerEntry(input_file.name[:3], None, examples, input_file, (None,))
+                    AnswerEntry(
+                        input_file.name[:3], None, examples, input_file, (None,)
+                    )
                 )
 
     return day_parts
