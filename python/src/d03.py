@@ -4,6 +4,7 @@ Advent Of Code 2023 Day 03
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from typing import Iterable, NamedTuple
 
@@ -20,18 +21,19 @@ class Coord(NamedTuple):
                 yield Coord(self.line + line_delta, self.col + col_delta)
 
 
-def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
-    p2 = 0
+def parse_input(lines: list[str]) -> tuple[list[tuple[int, set[Coord]]], set[Coord], set[Coord]]:
     numbers = []
     symbols = set()
-    for line_num, line in enumerate(input_file.read_text().splitlines()):
+    poss_gears = set()
+    for line_num, line in enumerate(lines):
         num = ""
         adjacent_coords: set[Coord] = set()
         for col_num, char in enumerate(line):
+            current_coord = Coord(line_num, col_num)
             if char.isdigit():
                 num += char
                 adjacent_coords.update(
-                    c for c in Coord(line_num, col_num).adjacent_coord()
+                    c for c in current_coord.adjacent_coord()
                 )
             else:
                 if num:
@@ -39,15 +41,27 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
                     num = ""
                     adjacent_coords = set()
                 if char != ".":
-                    symbols.add(Coord(line_num, col_num))
+                    symbols.add(current_coord)
+                    if char == "*":
+                        poss_gears.add(current_coord)
         if num:
             numbers.append((int(num), adjacent_coords))
+    return numbers, symbols, poss_gears
+
+
+def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
+    numbers, symbols, poss_gears = parse_input(input_file.read_text().splitlines())
 
     part_numbers = [
         num for num, adjacent_coords in numbers if adjacent_coords & symbols
     ]
+    gear_ratios = []
+    for gear_coord in poss_gears:
+        adjacent_nums = [num for num, adjacent_coords in numbers if gear_coord in adjacent_coords]
+        if len(adjacent_nums) == 2:
+            gear_ratios.append(math.prod(adjacent_nums))
 
-    return (sum(part_numbers), p2)
+    return (sum(part_numbers), sum(gear_ratios))
 
 
 if __name__ == "__main__":
