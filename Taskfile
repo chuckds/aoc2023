@@ -62,30 +62,6 @@ function rufffmt {
     venv/bin/ruff format python/src  # TBD if this replaces black
 }
 
-function timeday {
-    if [ -z "$1" ]; then
-        echo "Specify a day"
-        return 2
-    fi
-
-    DAY=$1
-    pushd ${REPO_ROOT}/python/src
-    venv/bin/python3 -m timeit "import ${DAY}; ${DAY}.p1p2(${DAY}.utils.real_input('${DAY}'))"
-    popd
-}
-
-function qtimeday {
-    if [ -z "$1" ]; then
-        echo "Specify a day"
-        return 2
-    fi
-
-    DAY=$1
-    pushd ${REPO_ROOT}/python/src
-    time venv/bin/python3 -c "import ${DAY}; print(${DAY}.p1p2(${DAY}.utils.real_input('${DAY}')))"
-    popd
-}
-
 function timedays {
     pushd ${REPO_ROOT}/python/src
     venv/bin/python3 -m utils
@@ -93,6 +69,7 @@ function timedays {
 }
 
 function testdays {
+    echo "Run each day (real input only)"
     venv/bin/pytest --durations=0 -k test_puzzles ${REPO_ROOT}/python/src
 }
 

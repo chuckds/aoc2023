@@ -125,12 +125,16 @@ def per_day_main(part_function: Any) -> None:
 
 
 def _run_all() -> None:
+    """
+    Get data from running each day on its own then all days in one go.
+    """
     timing_data = []
     test_calls = []
     for answer in get_all_days(False):
-        if answer.function_name is None:
+        if any(res is None for res in answer.expected_result):
             # We don't have the answer for this yet
             continue
+        assert answer.function_name is not None
         day_mod = importlib.__import__(answer.module_name)
         part_function = getattr(day_mod, answer.function_name)
         ti = timeit.Timer(lambda: part_function(answer.input_file))
@@ -140,6 +144,7 @@ def _run_all() -> None:
         )
         test_calls.append((part_function, answer.input_file))
 
+    # Now run all days together
     ALL_COUNT = 1
     all_days = timeit.timeit(
         lambda: [day(input) for day, input in test_calls], number=ALL_COUNT
