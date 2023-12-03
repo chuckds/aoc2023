@@ -21,7 +21,9 @@ class Coord(NamedTuple):
                 yield Coord(self.line + line_delta, self.col + col_delta)
 
 
-def parse_input(lines: list[str]) -> tuple[list[tuple[int, set[Coord]]], set[Coord], set[Coord]]:
+def parse_input(
+    lines: list[str],
+) -> tuple[list[tuple[int, set[Coord]]], set[Coord], set[Coord]]:
     numbers = []
     symbols = set()
     poss_gears = set()
@@ -32,9 +34,7 @@ def parse_input(lines: list[str]) -> tuple[list[tuple[int, set[Coord]]], set[Coo
             current_coord = Coord(line_num, col_num)
             if char.isdigit():
                 num += char
-                adjacent_coords.update(
-                    c for c in current_coord.adjacent_coord()
-                )
+                adjacent_coords.update(c for c in current_coord.adjacent_coord())
             else:
                 if num:
                     numbers.append((int(num), adjacent_coords))
@@ -57,7 +57,9 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
     ]
     gear_ratios = []
     for gear_coord in poss_gears:
-        adjacent_nums = [num for num, adjacent_coords in numbers if gear_coord in adjacent_coords]
+        adjacent_nums = [
+            num for num, adjacent_coords in numbers if gear_coord in adjacent_coords
+        ]
         if len(adjacent_nums) == 2:
             gear_ratios.append(math.prod(adjacent_nums))
 
