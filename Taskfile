@@ -64,7 +64,7 @@ function rufffmt {
 
 function timedays {
     pushd ${REPO_ROOT}/python/src
-    venv/bin/python3 -m utils
+    ../../venv/bin/python3 -m utils "$@"
     popd
 }
 

@@ -2,6 +2,7 @@ import argparse
 import importlib
 import inspect
 import json
+import sys
 import time
 import timeit
 from pathlib import Path
@@ -128,7 +129,7 @@ def per_day_main(part_function: Any, example_only: bool = False) -> None:
         process_result(answer, result)
 
 
-def _run_all() -> None:
+def _run_all(days: list[str]) -> None:
     """
     Get data from running each day on its own then all days in one go.
     """
@@ -139,6 +140,8 @@ def _run_all() -> None:
             # We don't have the answer for this yet
             continue
         assert answer.function_name is not None
+        if days and answer.module_name not in days:
+            continue
         day_mod = importlib.__import__(answer.module_name)
         part_function = getattr(day_mod, answer.function_name)
         ti = timeit.Timer(lambda: part_function(answer.input_file))
@@ -164,4 +167,4 @@ def _run_all() -> None:
 
 
 if __name__ == "__main__":
-    _run_all()
+    _run_all(sys.argv[1:])
