@@ -45,6 +45,9 @@ def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]
         if input_file_suffix:
             input_file = input_file.parent / (input_file.name + input_file_suffix[0])
         inputs_seen.add(input_file)
+        if needs_answer and any(res is None for res in expected_result):
+            # Only return this answer if all answers are known
+            continue
         if (is_example and examples) or (not is_example and not examples):
             day_parts.append(
                 AnswerEntry(
@@ -91,13 +94,14 @@ def process_result(answer: AnswerEntry, result: Any) -> None:
             ), f"{answer.result_name()}-{part_idx} result wrong, expected: {expected_result_part} got {result_part}"
 
 
-def per_day_main(part_function: Any) -> None:
+def per_day_main(part_function: Any, example_only: bool = False) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--example", action="store_true", help="Example only")
     parser.add_argument("--real", action="store_true", help="Real only")
     args = parser.parse_args()
     day = Path(inspect.stack()[1].filename).stem
 
+    example_only = example_only or args.example
     def _get_day_info(day: str) -> list[AnswerEntry]:
         day_info = []
         for example in (True, False):
@@ -110,7 +114,7 @@ def per_day_main(part_function: Any) -> None:
     to_check = []
     day_mod: Any = None
     for answer in day_answers:
-        if answer.is_example and args.real or (not answer.is_example and args.example):
+        if answer.is_example and args.real or (not answer.is_example and example_only):
             continue
         if answer.function_name:
             day_mod = importlib.__import__(day) if day_mod is None else day_mod
