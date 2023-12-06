@@ -15,23 +15,23 @@ class MapRange(NamedTuple):
     dest_st: int
 
 
-def map_range(seed_range: range, dest: MapRange) -> tuple[list[range], range | None]:
+def map_range(seed_range: range, map_range: MapRange) -> tuple[list[range], range | None]:
     if (
-        seed_range.start >= dest.source.stop or seed_range.stop <= dest.source.start
+        seed_range.start >= map_range.source.stop or seed_range.stop <= map_range.source.start
     ):  # disjoint
         return ([seed_range], None)
     else:
         unmapped = []
-        if seed_range.start < dest.source.start:
+        if seed_range.start < map_range.source.start:
             # Part of the range doesn't overlap
-            unmapped.append(range(seed_range.start, dest.source.start))
-        mapped_start = max(seed_range.start, dest.source.start)
-        mapped_len = min(seed_range.stop, dest.source.stop) - mapped_start
-        new_start = dest.dest_st + dest.source.index(mapped_start)
+            unmapped.append(range(seed_range.start, map_range.source.start))
+        mapped_start = max(seed_range.start, map_range.source.start)
+        mapped_len = min(seed_range.stop, map_range.source.stop) - mapped_start
+        new_start = map_range.dest_st + map_range.source.index(mapped_start)
         mapped = range(new_start, new_start + mapped_len)
-        if seed_range.stop > dest.source.stop:
+        if seed_range.stop > map_range.source.stop:
             # Unmapped the other side
-            unmapped.append(range(dest.source.stop, seed_range.stop))
+            unmapped.append(range(map_range.source.stop, seed_range.stop))
         return (unmapped, mapped)
 
 
