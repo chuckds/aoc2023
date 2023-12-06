@@ -15,6 +15,44 @@ class MapRange(NamedTuple):
     dest_st: int
 
 
+def map_range(seed_range: range, dest: MapRange) -> tuple[list[range], range | None]:
+    if (
+        seed_range.start >= dest.source.stop or seed_range.stop <= dest.source.start
+    ):  # disjoint
+        return ([seed_range], None)
+    else:
+        unmapped = []
+        if seed_range.start < dest.source.start:
+            # Part of the range doesn't overlap
+            unmapped.append(range(seed_range.start, dest.source.start))
+        mapped_start = max(seed_range.start, dest.source.start)
+        mapped_len = min(seed_range.stop, dest.source.stop) - mapped_start
+        new_start = dest.dest_st + dest.source.index(mapped_start)
+        mapped = range(new_start, new_start + mapped_len)
+        if seed_range.stop > dest.source.stop:
+            # Unmapped the other side
+            unmapped.append(range(dest.source.stop, seed_range.stop))
+        return (unmapped, mapped)
+
+
+def location_from_seed_range(seed_range: range, mappings: list[list[MapRange]]) -> int:
+    seed_ranges = [seed_range]
+    for ranges in mappings:
+        mapped_ranges = []
+        for source_range in ranges:
+            unmapped_ranges = []
+            for seed_range in seed_ranges:
+                new_unmapped_ranges, new_mapped_ranges = map_range(
+                    seed_range, source_range
+                )
+                unmapped_ranges.extend(new_unmapped_ranges)
+                if new_mapped_ranges is not None:
+                    mapped_ranges.append(new_mapped_ranges)
+            seed_ranges = unmapped_ranges
+        seed_ranges = unmapped_ranges + mapped_ranges
+    return min(seed_range.start for seed_range in seed_ranges)
+
+
 def location_from_seed(seed: int, mappings: list[list[MapRange]]) -> int:
     for ranges in mappings:
         for source_range in ranges:
@@ -51,10 +89,17 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
     mappings = parse(lines)
 
     p1 = min(location_from_seed(seed, mappings) for seed in seeds)
-    seed_ranges = [range(seed_st, seed_st + length) for seed_st, length in zip(seeds[::2], seeds[1::2])]
-    p2_seeds = {seed for seed_range in seed_ranges for seed in seed_range}
-    return (p1, min(location_from_seed(seed, mappings) for seed in p2_seeds))
+    seed_ranges = [
+        range(seed_st, seed_st + length)
+        for seed_st, length in zip(seeds[::2], seeds[1::2])
+    ]
+    return (
+        p1,
+        min(
+            location_from_seed_range(seed_range, mappings) for seed_range in seed_ranges
+        ),
+    )
 
 
 if __name__ == "__main__":
-    utils.per_day_main(p1p2)
+    utils.per_day_main(p1p2, example_only=False)

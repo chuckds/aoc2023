@@ -103,6 +103,7 @@ def per_day_main(part_function: Any, example_only: bool = False) -> None:
     day = Path(inspect.stack()[1].filename).stem
 
     example_only = example_only or args.example
+
     def _get_day_info(day: str) -> list[AnswerEntry]:
         day_info = []
         for example in (True, False):
