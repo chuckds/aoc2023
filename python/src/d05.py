@@ -15,9 +15,12 @@ class MapRange(NamedTuple):
     dest_st: int
 
 
-def map_range(seed_range: range, map_range: MapRange) -> tuple[list[range], range | None]:
+def map_range(
+    seed_range: range, map_range: MapRange
+) -> tuple[list[range], range | None]:
     if (
-        seed_range.start >= map_range.source.stop or seed_range.stop <= map_range.source.start
+        seed_range.start >= map_range.source.stop
+        or seed_range.stop <= map_range.source.start
     ):  # disjoint
         return ([seed_range], None)
     else:
