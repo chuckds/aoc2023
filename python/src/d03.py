@@ -52,9 +52,9 @@ def parse_input(
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
     numbers, symbols, poss_gears = parse_input(input_file.read_text().splitlines())
 
-    part_numbers = [
+    part_numbers = (
         num for num, adjacent_coords in numbers if adjacent_coords & symbols
-    ]
+    )
     gear_ratios = []
     for gear_coord in poss_gears:
         adjacent_nums = [

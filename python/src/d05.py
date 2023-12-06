@@ -15,7 +15,7 @@ class MapRange(NamedTuple):
     dest_st: int
 
 
-def map_range(
+def get_mapped_range(
     seed_range: range, map_range: MapRange
 ) -> tuple[list[range], range | None]:
     if (
@@ -45,7 +45,7 @@ def location_from_seed_range(seed_range: range, mappings: list[list[MapRange]]) 
         for source_range in ranges:
             unmapped_ranges = []
             for seed_range in seed_ranges:
-                new_unmapped_ranges, new_mapped_ranges = map_range(
+                new_unmapped_ranges, new_mapped_ranges = get_mapped_range(
                     seed_range, source_range
                 )
                 unmapped_ranges.extend(new_unmapped_ranges)
@@ -92,10 +92,10 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
     mappings = parse(lines)
 
     p1 = min(location_from_seed(seed, mappings) for seed in seeds)
-    seed_ranges = [
+    seed_ranges = (
         range(seed_st, seed_st + length)
         for seed_st, length in zip(seeds[::2], seeds[1::2])
-    ]
+    )
     return (
         p1,
         min(

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
+from typing import Generator
 
 import utils
 
@@ -25,7 +26,7 @@ def get_ways_to_win(time: int, max_distance: int) -> int:
 
     """
     tricky_bit = math.sqrt(time**2 - 4 * max_distance)
-    vals = [(time + sign * tricky_bit) / 2 for sign in (-1, 1)]
+    vals = ((time + sign * tricky_bit) / 2 for sign in (-1, 1))
     # Now do annoying rounding stuff
     int_vals = [
         int(val) + sign if int(val) == val else math.ceil(val)
@@ -34,9 +35,9 @@ def get_ways_to_win(time: int, max_distance: int) -> int:
     return int_vals[1] - int_vals[0]
 
 
-def get_nums(line: str) -> tuple[list[int], int]:
+def get_nums(line: str) -> tuple[Generator[int, None, None], int]:
     str_nums = line.split(":")[1].split()
-    return [int(token) for token in str_nums], int("".join(str_nums))
+    return (int(token) for token in str_nums), int("".join(str_nums))
 
 
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
@@ -44,10 +45,10 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
     times, p2_time = get_nums(lines[0])
     distances, p2_dist = get_nums(lines[1])
 
-    ways_to_win = [
+    ways_to_win = (
         get_ways_to_win(time, max_distance)
         for time, max_distance in zip(times, distances)
-    ]
+    )
     return (math.prod(ways_to_win), get_ways_to_win(p2_time, p2_dist))
 
 

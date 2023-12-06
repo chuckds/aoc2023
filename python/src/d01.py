@@ -5,6 +5,7 @@ Advent Of Code 2023 Day 01
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Generator
 
 import utils
 
@@ -19,8 +20,7 @@ digit_subsets_back = {
 }
 
 
-def get_calibration_values(lines: list[str], part2: bool) -> list[int]:
-    calibration_values = []
+def get_calibration_values(lines: list[str], part2: bool) -> Generator[int, None, None]:
     for line in lines:
         first = last = "0"
         poss_word = ""
@@ -57,8 +57,7 @@ def get_calibration_values(lines: list[str], part2: bool) -> list[int]:
                             break
                     else:
                         poss_word = ""
-        calibration_values.append(int(first + last))
-    return calibration_values
+        yield int(first + last)
 
 
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:

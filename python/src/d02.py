@@ -20,15 +20,19 @@ class GameBallCounts(NamedTuple):
         return all(bc <= lc for bc, lc in zip(self, limit))
 
 
+def get_colout_counts(cube_reveals: str) -> GameBallCounts:
+    colour_counts = {}
+    for colour_count_str in cube_reveals.split(","):
+        count, colour = colour_count_str.strip().split()
+        colour_counts[colour] = int(count)
+    return GameBallCounts(**colour_counts)
+
+
 def get_game_ball_counts(ball_counts: str) -> list[GameBallCounts]:
-    gbcs = []
-    for cube_reveals in ball_counts.split(";"):
-        colour_counts = {}
-        for colour_count_str in cube_reveals.split(","):
-            count, colour = colour_count_str.strip().split()
-            colour_counts[colour] = int(count)
-        gbcs.append(GameBallCounts(**colour_counts))
-    return gbcs
+    return [
+        get_colout_counts(cube_reveals)
+        for cube_reveals in ball_counts.split(";")
+    ]
 
 
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
@@ -38,12 +42,12 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
     ]
 
     p1_limit = GameBallCounts(12, 13, 14)
-    valid_games = [
+    valid_games = (
         idx + 1
         for idx, game_reveals in enumerate(games)
         if all(game_reveal.is_possible(p1_limit) for game_reveal in game_reveals)
-    ]
-    min_colours = [
+    )
+    min_colours = (
         GameBallCounts(
             *(
                 max(gr[idx] for gr in game_reveals)
@@ -51,7 +55,7 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
             )
         )
         for game_reveals in games
-    ]
+    )
     return (sum(valid_games), sum(math.prod(gbc) for gbc in min_colours))
 
 
