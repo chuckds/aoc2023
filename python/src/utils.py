@@ -99,6 +99,7 @@ def per_day_main(part_function: Any, example_only: bool = False) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--example", action="store_true", help="Example only")
     parser.add_argument("--real", action="store_true", help="Real only")
+    parser.add_argument("--repeat", default=1, type=int, help="Number of times to run the test")
     args = parser.parse_args()
     day = Path(inspect.stack()[1].filename).stem
 
@@ -118,13 +119,16 @@ def per_day_main(part_function: Any, example_only: bool = False) -> None:
     for answer in day_answers:
         if answer.is_example and args.real or (not answer.is_example and example_only):
             continue
-        if answer.function_name:
-            day_mod = importlib.__import__(day) if day_mod is None else day_mod
-            part_function = getattr(day_mod, answer.function_name)
+        if not answer.function_name:
+            continue
+
+        day_mod = importlib.__import__(day) if day_mod is None else day_mod
+        part_function = getattr(day_mod, answer.function_name)
         start = time.perf_counter()
-        result = part_function(answer.input_file)
+        for _ in range(args.repeat):
+            result = part_function(answer.input_file)
         duration = time.perf_counter() - start
-        print(f"{answer.result_name()} = {result} (in {duration:.3f}s)")
+        print(f"{answer.result_name()} = {result} (in {duration / args.repeat:.3f}s)")
         to_check.append((answer, result))
     for answer, result in to_check:
         process_result(answer, result)

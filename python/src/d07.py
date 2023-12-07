@@ -28,8 +28,8 @@ class HandType(enum.IntEnum):
 
 
 class HandRank(NamedTuple):
-    rank: int
-    value: int
+    rank: HandType
+    value: tuple[int, ...]
 
 
 def get_hand_type(num_groups: int, size_longest_group: int) -> HandType:
@@ -46,10 +46,6 @@ def get_hand_type(num_groups: int, size_longest_group: int) -> HandType:
             return HandType.HIGH_CARD
 
 
-def hand_to_val(hand: str, order: dict[str, int]) -> int:
-    return sum(order[card] * 13**exponent for exponent, card in enumerate(hand[::-1]))
-
-
 def get_hand_ranks(hand: str) -> tuple[HandRank, HandRank]:
     card_count = Counter(hand)
     most_common_2 = card_count.most_common(2)
@@ -60,8 +56,8 @@ def get_hand_ranks(hand: str) -> tuple[HandRank, HandRank]:
         p2 = get_hand_type(len(card_count) - 1, num_js + size_of_group_to_join)
     else:
         p2 = p1
-    return (HandRank(p1, hand_to_val(hand, CARD_TO_ORDER)),
-            HandRank(p2, hand_to_val(hand, CARD_TO_ORDER_P2)))
+    return (HandRank(p1, tuple(CARD_TO_ORDER[card] for card in hand)),
+            HandRank(p2, tuple(CARD_TO_ORDER_P2[card] for card in hand)))
 
 
 class Hand(NamedTuple):
