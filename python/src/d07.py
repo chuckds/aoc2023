@@ -32,44 +32,18 @@ class HandRank(NamedTuple):
     value: int
 
 
-def calc_p1_type(hand: str) -> HandType:
-    card_count = Counter(hand)
-    match len(card_count):
+def get_hand_type(num_groups: int, size_longest_group: int) -> HandType:
+    match num_groups:
         case 1:
             return HandType.FIVE_KIND
         case 2:
-            return HandType.FOUR_KIND if card_count.most_common(1)[0][1] == 4 else HandType.FULL_HOUSE
+            return HandType.FOUR_KIND if size_longest_group == 4 else HandType.FULL_HOUSE
         case 3:
-            return HandType.THREE_KIND if card_count.most_common(1)[0][1] == 3 else HandType.TWO_PAIR
+            return HandType.THREE_KIND if size_longest_group == 3 else HandType.TWO_PAIR
         case 4:
             return HandType.ONE_PAIR
-        case _:
+        case _:  # 5
             return HandType.HIGH_CARD
-
-
-def calc_p2_type(hand: str, p1_type: HandType) -> HandType | int:
-    match hand.count("J"):
-        case 4:
-            return HandType.FIVE_KIND
-        case 3:
-            # Either at 3-kind or full house, go to 4-kind or 5-kind
-            return p1_type + 2
-        case 2:
-            match p1_type:
-                case HandType.FULL_HOUSE | HandType.ONE_PAIR:
-                    return p1_type + 2  # Go to five-kind or 3-kind
-                case HandType.TWO_PAIR:
-                    return p1_type + 3  # Go to 4 kind
-                case _:
-                    assert False
-        case 1:
-            match p1_type:
-                case HandType.HIGH_CARD | HandType.FOUR_KIND:
-                    return p1_type + 1
-                case _:
-                    return p1_type + 2
-        case _:  # 5 | 0
-            return p1_type
 
 
 def hand_to_val(hand: str, order: dict[str, int]) -> int:
@@ -77,9 +51,17 @@ def hand_to_val(hand: str, order: dict[str, int]) -> int:
 
 
 def get_hand_ranks(hand: str) -> tuple[HandRank, HandRank]:
-    p1_type = calc_p1_type(hand)
-    return (HandRank(p1_type, hand_to_val(hand, CARD_TO_ORDER)),
-            HandRank(calc_p2_type(hand, p1_type), hand_to_val(hand, CARD_TO_ORDER_P2)))
+    card_count = Counter(hand)
+    most_common_2 = card_count.most_common(2)
+    p1 = get_hand_type(len(card_count), most_common_2[0][1])
+    num_js = card_count["J"]
+    if 0 < num_js < 5:
+        size_of_group_to_join = most_common_2[1][1] if most_common_2[0][0] == "J" else most_common_2[0][1]
+        p2 = get_hand_type(len(card_count) - 1, num_js + size_of_group_to_join)
+    else:
+        p2 = p1
+    return (HandRank(p1, hand_to_val(hand, CARD_TO_ORDER)),
+            HandRank(p2, hand_to_val(hand, CARD_TO_ORDER_P2)))
 
 
 class Hand(NamedTuple):
