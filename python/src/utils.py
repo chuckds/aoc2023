@@ -21,9 +21,10 @@ class AnswerEntry(NamedTuple):
     is_example: bool
     input_file: Path
     expected_result: tuple[Any]
+    input_file_suffix: str
 
     def result_name(self) -> str:
-        return f"{self.module_name}-{'example' if self.is_example else 'real':7s}"
+        return f"{self.module_name}-{'example' if self.is_example else 'real':7s}{self.input_file_suffix}"
 
 
 def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]:
@@ -34,7 +35,7 @@ def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]
         function_name,
         is_example,
         expected_result,
-        *input_file_suffix,
+        *optional_args,
     ) in json.loads(ANSWER_FILE.read_text()):
         if isinstance(expected_result, list):
             expected_result = tuple(expected_result)
@@ -43,8 +44,11 @@ def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]
 
         sub_dir = "examples" if is_example else "real"
         input_file = INPUT_DIR / sub_dir / module_name
-        if input_file_suffix:
-            input_file = input_file.parent / (input_file.name + input_file_suffix[0])
+        if optional_args:
+            input_file_suffix = optional_args[0]
+            input_file = input_file.parent / (input_file.name + input_file_suffix)
+        else:
+            input_file_suffix = ""
         inputs_seen.add(input_file)
         if needs_answer and any(res is None for res in expected_result):
             # Only return this answer if all answers are known
@@ -52,7 +56,7 @@ def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]
         if (is_example and examples) or (not is_example and not examples):
             day_parts.append(
                 AnswerEntry(
-                    module_name, function_name, is_example, input_file, expected_result
+                    module_name, function_name, is_example, input_file, expected_result, input_file_suffix
                 )
             )
 
@@ -63,7 +67,7 @@ def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]
             if input_file not in inputs_seen:
                 day_parts.append(
                     AnswerEntry(
-                        input_file.name[:3], None, examples, input_file, (None,)
+                        input_file.name[:3], None, examples, input_file, (None,), input_file.name[3:]
                     )
                 )
 
@@ -119,11 +123,11 @@ def per_day_main(part_function: Any, example_only: bool = False) -> None:
     for answer in day_answers:
         if answer.is_example and args.real or (not answer.is_example and example_only):
             continue
-        if not answer.function_name:
-            continue
-
-        day_mod = importlib.__import__(day) if day_mod is None else day_mod
-        part_function = getattr(day_mod, answer.function_name)
+        if answer.function_name:
+            # If the function name is in the answer entry then use that
+            # rather than what was passed in
+            day_mod = importlib.__import__(day) if day_mod is None else day_mod
+            part_function = getattr(day_mod, answer.function_name)
         start = time.perf_counter()
         for _ in range(args.repeat):
             result = part_function(answer.input_file)
