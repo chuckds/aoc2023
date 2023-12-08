@@ -30,27 +30,21 @@ class MapData(NamedTuple):
     directions: list[int]
     node_map: dict[str, Node]
 
-    def next_node(self, start: Node) -> Generator[tuple[Node, int], None, None]:
+    def next_node(self, start: Node) -> Generator[Node, None, None]:
         location = start
         while True:
-            for dir_idx, direction in enumerate(self.directions):
+            for direction in self.directions:
                 location = self.node_map[location[direction]]
-                if dir_idx + 1 == len(self.directions):
-                    yield location, 0
-                else:
-                    yield location, dir_idx + 1
+                yield location
 
 
 def get_loop_info(start: Node, md: MapData) -> int:
+    """Not sure why this works. All the loops seem to be the same length..."""
     steps_to_end = 0
-    seen = {(start, 0): 0}
-    for node_idx_pair in md.next_node(start):
-        next_node = node_idx_pair[0]
-        if node_idx_pair in seen:
-            break
+    for next_node in md.next_node(start):
+        steps_to_end += 1
         if next_node.name.endswith("Z"):
-            steps_to_end = len(seen)  # In theory this should be a list but for our inputs this is fine
-        seen[node_idx_pair] = len(seen)
+            break
     return steps_to_end
 
 
@@ -63,16 +57,13 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
     p1 = 0
     if start:
         end = md.node_map["ZZZ"]
-        for next_node, _ in md.next_node(start):
+        for next_node in md.next_node(start):
             p1 += 1
             if next_node == end:
                 break
 
-    starts = [node for node in md.node_map.values() if node.name.endswith("A")]
-    loops = (
-        get_loop_info(start, md) for start in starts
-    )
-    p2 = math.lcm(*loops)
+    starts = (node for node in md.node_map.values() if node.name.endswith("A"))
+    p2 = math.lcm(*(get_loop_info(start, md) for start in starts))
     return (p1, p2)
 
 
