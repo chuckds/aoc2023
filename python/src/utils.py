@@ -99,7 +99,7 @@ def process_result(answer: AnswerEntry, result: Any) -> None:
             ), f"{answer.result_name()}-{part_idx} result wrong, expected: {expected_result_part} got {result_part}"
 
 
-def per_day_main(part_function: Any, example_only: bool = False) -> None:
+def per_day_main(part_function: Any, example_only: bool = False, real_only: bool = False, input_suffix: str = "") -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--example", action="store_true", help="Example only")
     parser.add_argument("--real", action="store_true", help="Real only")
@@ -108,6 +108,7 @@ def per_day_main(part_function: Any, example_only: bool = False) -> None:
     day = Path(inspect.stack()[1].filename).stem
 
     example_only = example_only or args.example
+    real_only = real_only or args.real
 
     def _get_day_info(day: str) -> list[AnswerEntry]:
         day_info = []
@@ -121,7 +122,9 @@ def per_day_main(part_function: Any, example_only: bool = False) -> None:
     to_check = []
     day_mod: Any = None
     for answer in day_answers:
-        if answer.is_example and args.real or (not answer.is_example and example_only):
+        if answer.is_example and real_only or (not answer.is_example and example_only):
+            continue
+        if input_suffix and answer.input_file_suffix != input_suffix:
             continue
         if answer.function_name:
             # If the function name is in the answer entry then use that
