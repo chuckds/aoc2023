@@ -44,14 +44,15 @@ def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]
 
         sub_dir = "examples" if is_example else "real"
         input_file = INPUT_DIR / sub_dir / module_name
+        input_file_suffix = ""
         if optional_args:
             input_file_suffix = optional_args[0]
             input_file = input_file.parent / (input_file.name + input_file_suffix)
-        else:
-            input_file_suffix = ""
+
         inputs_seen.add(input_file)
         if needs_answer and any(res is None for res in expected_result):
             # Only return this answer if all answers are known
+            print(f"Skipping {module_name}/{input_file} since not all answers known")
             continue
         if (is_example and examples) or (not is_example and not examples):
             day_parts.append(
@@ -148,9 +149,6 @@ def _run_all(days: list[str]) -> None:
     timing_data = []
     test_calls = []
     for answer in get_all_days(False):
-        if any(res is None for res in answer.expected_result):
-            # We don't have the answer for this yet
-            continue
         assert answer.function_name is not None
         if days and answer.module_name not in days:
             continue
