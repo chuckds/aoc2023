@@ -162,7 +162,7 @@ def _run_all(days: list[str]) -> None:
         test_calls.append((part_function, answer.input_file))
 
     # Now run all days together
-    ALL_COUNT = 1
+    ALL_COUNT = 10
     all_days = timeit.timeit(
         lambda: [day(input) for day, input in test_calls], number=ALL_COUNT
     )
