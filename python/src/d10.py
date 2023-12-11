@@ -19,16 +19,10 @@ class Direction(enum.Enum):
     EAST = (1, 0)
 
 
-DIR_TO_LEFT = {
-    dir: Direction((-1 * dir.value[1], dir.value[0]))
-    for dir in Direction
-}
+DIR_TO_LEFT = {dir: Direction((-1 * dir.value[1], dir.value[0])) for dir in Direction}
 
 
-DIR_TO_RIGHT = {
-    dir: Direction((dir.value[1], -1 * dir.value[0]))
-    for dir in Direction
-}
+DIR_TO_RIGHT = {dir: Direction((dir.value[1], -1 * dir.value[0])) for dir in Direction}
 
 
 class Coord(NamedTuple):
