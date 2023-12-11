@@ -73,6 +73,14 @@ function testdays {
     venv/bin/pytest --durations=0 -k test_puzzles ${REPO_ROOT}/python/src
 }
 
+function profile {
+    DAY=$1
+    pushd ${REPO_ROOT}/python/src
+    ../../venv/bin/python3.12 -m cProfile -o d${DAY}.prof d${DAY}.py --real --repeat 10
+    ../../venv/bin/snakeviz d${DAY}.prof
+    popd
+}
+
 function help {
     echo "$0 <task> <args>"
     echo "Tasks:"

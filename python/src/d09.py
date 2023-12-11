@@ -21,8 +21,7 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
         next_val = value_history[-1]
         while any(value_history):
             value_history = [
-                next - prev
-                for next, prev in zip(value_history[1:], value_history)
+                next - prev for next, prev in zip(value_history[1:], value_history)
             ]
             next_val += value_history[-1]
             first_differnces.append(value_history[0])

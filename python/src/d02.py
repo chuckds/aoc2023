@@ -29,10 +29,7 @@ def get_colout_counts(cube_reveals: str) -> GameBallCounts:
 
 
 def get_game_ball_counts(ball_counts: str) -> list[GameBallCounts]:
-    return [
-        get_colout_counts(cube_reveals)
-        for cube_reveals in ball_counts.split(";")
-    ]
+    return [get_colout_counts(cube_reveals) for cube_reveals in ball_counts.split(";")]
 
 
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:

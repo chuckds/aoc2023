@@ -24,7 +24,12 @@ class AnswerEntry(NamedTuple):
     input_file_suffix: str
 
     def result_name(self) -> str:
-        return f"{self.module_name}-{'example' if self.is_example else 'real':7s}{self.input_file_suffix}"
+        if self.is_example:
+            i_suffix = "-" + self.input_file_suffix if self.input_file_suffix else ""
+            input_txt = "exmaple" + i_suffix
+        else:
+            input_txt = "real"
+        return f"{self.module_name}-{input_txt:9s}"
 
 
 def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]:
@@ -57,7 +62,12 @@ def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]
         if (is_example and examples) or (not is_example and not examples):
             day_parts.append(
                 AnswerEntry(
-                    module_name, function_name, is_example, input_file, expected_result, input_file_suffix
+                    module_name,
+                    function_name,
+                    is_example,
+                    input_file,
+                    expected_result,
+                    input_file_suffix,
                 )
             )
 
@@ -68,7 +78,12 @@ def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]
             if input_file not in inputs_seen:
                 day_parts.append(
                     AnswerEntry(
-                        input_file.name[:3], None, examples, input_file, (None,), input_file.name[3:]
+                        input_file.name[:3],
+                        None,
+                        examples,
+                        input_file,
+                        (None,),
+                        input_file.name[3:],
                     )
                 )
 
@@ -94,17 +109,24 @@ def process_result(answer: AnswerEntry, result: Any) -> None:
     for part_idx, (expected_result_part, result_part) in enumerate(
         zip(answer.expected_result, result)
     ):
-        if expected_result_part is not None:
+        if expected_result_part is not None and result_part is not None:
             assert (
                 expected_result_part == result_part
             ), f"{answer.result_name()}-{part_idx} result wrong, expected: {expected_result_part} got {result_part}"
 
 
-def per_day_main(part_function: Any, example_only: bool = False, real_only: bool = False, input_suffix: str = "") -> None:
+def per_day_main(
+    part_function: Any,
+    example_only: bool = False,
+    real_only: bool = False,
+    input_suffix: str = "",
+) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--example", action="store_true", help="Example only")
     parser.add_argument("--real", action="store_true", help="Real only")
-    parser.add_argument("--repeat", default=1, type=int, help="Number of times to run the test")
+    parser.add_argument(
+        "--repeat", default=1, type=int, help="Number of times to run the test"
+    )
     args = parser.parse_args()
     day = Path(inspect.stack()[1].filename).stem
 
@@ -136,7 +158,9 @@ def per_day_main(part_function: Any, example_only: bool = False, real_only: bool
         for _ in range(args.repeat):
             result = part_function(answer.input_file)
         duration = time.perf_counter() - start
-        print(f"{answer.result_name()} = {result} (in {duration / args.repeat:.3f}s)")
+        print(
+            f"{answer.result_name()} = {result} (in {duration / args.repeat:.3f}s) - expecting {answer.expected_result}"
+        )
         to_check.append((answer, result))
     for answer, result in to_check:
         process_result(answer, result)

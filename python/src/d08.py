@@ -6,10 +6,9 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import NamedTuple, Generator
+from typing import Generator, NamedTuple
 
 import utils
-
 
 DIR_TO_IDX = {"L": 0, "R": 1}
 
@@ -51,8 +50,9 @@ def get_loop_info(start: Node, md: MapData) -> int:
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
     lines = input_file.read_text().splitlines()
     nodes = (Node.from_line(line) for line in lines[2:])
-    md = MapData([DIR_TO_IDX[dir] for dir in lines[0]],
-                 {node.name: node for node in nodes})
+    md = MapData(
+        [DIR_TO_IDX[dir] for dir in lines[0]], {node.name: node for node in nodes}
+    )
     start = md.node_map.get("AAA", None)
     p1 = 0
     if start:

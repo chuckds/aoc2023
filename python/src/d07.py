@@ -11,10 +11,11 @@ from typing import NamedTuple
 
 import utils
 
-
 CARD_ORDER = "AKQJT98765432"
 CARD_TO_ORDER = {card: idx for idx, card in enumerate(CARD_ORDER[::-1])}
-CARD_TO_ORDER_P2 = {card: idx for idx, card in enumerate((CARD_ORDER.replace("J","") + "J")[::-1])}
+CARD_TO_ORDER_P2 = {
+    card: idx for idx, card in enumerate((CARD_ORDER.replace("J", "") + "J")[::-1])
+}
 
 
 class HandType(enum.IntEnum):
@@ -37,7 +38,9 @@ def get_hand_type(num_groups: int, size_longest_group: int) -> HandType:
         case 1:
             return HandType.FIVE_KIND
         case 2:
-            return HandType.FOUR_KIND if size_longest_group == 4 else HandType.FULL_HOUSE
+            return (
+                HandType.FOUR_KIND if size_longest_group == 4 else HandType.FULL_HOUSE
+            )
         case 3:
             return HandType.THREE_KIND if size_longest_group == 3 else HandType.TWO_PAIR
         case 4:
@@ -52,12 +55,16 @@ def get_hand_ranks(hand: str) -> tuple[HandRank, HandRank]:
     p1 = get_hand_type(len(card_count), most_common_2[0][1])
     num_js = card_count["J"]
     if 0 < num_js < 5:
-        size_of_group_to_join = most_common_2[1][1] if most_common_2[0][0] == "J" else most_common_2[0][1]
+        size_of_group_to_join = (
+            most_common_2[1][1] if most_common_2[0][0] == "J" else most_common_2[0][1]
+        )
         p2 = get_hand_type(len(card_count) - 1, num_js + size_of_group_to_join)
     else:
         p2 = p1
-    return (HandRank(p1, tuple(CARD_TO_ORDER[card] for card in hand)),
-            HandRank(p2, tuple(CARD_TO_ORDER_P2[card] for card in hand)))
+    return (
+        HandRank(p1, tuple(CARD_TO_ORDER[card] for card in hand)),
+        HandRank(p2, tuple(CARD_TO_ORDER_P2[card] for card in hand)),
+    )
 
 
 class Hand(NamedTuple):
@@ -74,8 +81,14 @@ class Hand(NamedTuple):
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
     hands = [Hand.from_line(line) for line in input_file.read_text().splitlines()]
 
-    p1 = sum((idx + 1) * hand.bid for idx, hand in enumerate(sorted(hands, key=lambda hand: hand.p1_rank)))
-    p2 = sum((idx + 1) * hand.bid for idx, hand in enumerate(sorted(hands, key=lambda hand: hand.p2_rank)))
+    p1 = sum(
+        (idx + 1) * hand.bid
+        for idx, hand in enumerate(sorted(hands, key=lambda hand: hand.p1_rank))
+    )
+    p2 = sum(
+        (idx + 1) * hand.bid
+        for idx, hand in enumerate(sorted(hands, key=lambda hand: hand.p2_rank))
+    )
     return (p1, p2)
 
 
