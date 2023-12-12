@@ -57,7 +57,7 @@ def get_all_days(examples: bool, needs_answer: bool = True) -> list[AnswerEntry]
         inputs_seen.add(input_file)
         if needs_answer and any(res is None for res in expected_result):
             # Only return this answer if all answers are known
-            print(f"Skipping {module_name}/{input_file} since not all answers known")
+            print(f"Skipping {module_name} - {input_file} since not all answers known")
             continue
         if (is_example and examples) or (not is_example and not examples):
             day_parts.append(
