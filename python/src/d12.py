@@ -70,9 +70,8 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
     spring_rowsp2 = [
         SpringLine.from_p2_line(line) for line in input_file.read_text().splitlines()
     ]
-    print(len(spring_rowsp2))
     #p2 = get_num_arrangements(spring_rowsp2)
-    p2 = 0
+    p2 = None
     return (p1, p2)
 
 
