@@ -172,7 +172,7 @@ def _run_all(days: list[str]) -> None:
     """
     timing_data = []
     test_calls = []
-    for answer in get_all_days(True, False):
+    for answer in get_all_days(False, True):
         assert answer.function_name is not None
         if days and answer.module_name not in days:
             continue
