@@ -35,4 +35,4 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, int]:
 
 
 if __name__ == "__main__":
-    utils.per_day_main(p1p2, example_only=False)
+    utils.per_day_main(p1p2)

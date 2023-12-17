@@ -117,9 +117,7 @@ def process_result(answer: AnswerEntry, result: Any) -> None:
 
 def per_day_main(
     part_function: Any,
-    example_only: bool = False,
-    real_only: bool = False,
-    input_suffix: str = "",
+    input_file: str = "",
 ) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--example", action="store_true", help="Example only")
@@ -130,8 +128,9 @@ def per_day_main(
     args = parser.parse_args()
     day = Path(inspect.stack()[1].filename).stem
 
-    example_only = example_only or args.example
-    real_only = real_only or args.real
+    example_only = input_file == "example" or args.example
+    real_only = input_file == "real" or args.real
+    input_suffix = "" if input_file in ("example", "real") else input_file
 
     def _get_day_info(day: str) -> list[AnswerEntry]:
         day_info = []
