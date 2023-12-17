@@ -69,20 +69,20 @@ def min_heat_loss_cb(start: CityBlock, end: CityBlock, p2: bool) -> int:
             continue
         visited.add(walk_state)
         block, num_straights, prev_dir = walk_state
-        if block == end:
-            return -1 * heat_loss
+        if block is end:
+            break
         from_dir = DIR_TO_OPPOSITE[prev_dir]
         for new_dir, new_block in block.connected.items():
-            if new_dir == from_dir:  # Can't go backwards
+            if new_dir is from_dir:  # Can't go backwards
                 continue
-            if new_dir == prev_dir:  # Straight on
+            if new_dir is prev_dir:  # Straight on
                 if num_straights >= (10 if p2 else 3):
                     continue
             elif p2 and num_straights <= 3:
                 continue
             walk_state = (
                 new_block,
-                num_straights + 1 if new_dir == prev_dir else 1,
+                num_straights + 1 if new_dir is prev_dir else 1,
                 new_dir
             )
             if walk_state in visited:
@@ -92,7 +92,7 @@ def min_heat_loss_cb(start: CityBlock, end: CityBlock, p2: bool) -> int:
                 (heat_loss - new_block.heat_loss, walk_state),
                 key=lambda x: x[0],
             )
-    return 0
+    return -1 * heat_loss
 
 
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int, ...]:

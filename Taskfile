@@ -76,7 +76,7 @@ function testdays {
 function profile {
     DAY=$1
     pushd ${REPO_ROOT}/python/src
-    ../../venv/bin/python3.12 -m cProfile -o /tmp/d${DAY}.prof d${DAY}.py --real --repeat 10
+    ../../venv/bin/python3.12 -m cProfile -o /tmp/d${DAY}.prof d${DAY}.py --real --repeat 3
     ../../venv/bin/snakeviz /tmp/d${DAY}.prof
     popd
 }
