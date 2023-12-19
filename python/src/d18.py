@@ -29,8 +29,9 @@ class Coord(NamedTuple):
     col: int
     line: int
 
-    def in_direction(self, direction: Direction) -> Coord:
-        return Coord(self.col + direction.value[0], self.line + direction.value[1])
+    def in_direction(self, direction: Direction, scale: int = 1) -> Coord:
+        return Coord(self.col + direction.value[0] * scale,
+                     self.line + direction.value[1] * scale)
 
     def adjacent(self) -> Generator[Coord, None, None]:
         for a_dir in Direction:
@@ -50,15 +51,25 @@ INST_TO_DIR = {
 }
 
 
+P2_INST_TO_DIR = {
+    "3": Direction.NORTH,
+    "1": Direction.SOUTH,
+    "2": Direction.WEST,
+    "0": Direction.EAST,
+}
+
 class Instruction(NamedTuple):
     direction: Direction
     dist: int
     colour: str
 
+    def p2_inst(self) -> Instruction:
+        return Instruction(P2_INST_TO_DIR[self.colour[-1]], int(self.colour[:5], 16), "")
+
     @classmethod
     def from_line(cls, line: str) -> Instruction:
         inst, dist, colour = line.split()
-        return cls(INST_TO_DIR[inst], int(dist), colour[1:-1])
+        return cls(INST_TO_DIR[inst], int(dist), colour[2:-1])
 
 
 def print_points(points: Iterable[Coord], char: str = "#") -> None:
@@ -108,7 +119,6 @@ def find_enclosed_ground(trench_loop: list[Heading]) -> set[Coord]:
             else:  # Not going straight on or left, can't go backwards so must be right
                 left_trench.add(straight_on)
 
-    # Assume the smallest set is the enclosed set - seems to work
     left_inside = [p for p in left_trench if is_inside(p, loop_locs)]
     right_inside = [p for p in right_trench if is_inside(p, loop_locs)]
     if len(right_inside) < len(left_inside):
@@ -129,20 +139,46 @@ def find_enclosed_ground(trench_loop: list[Heading]) -> set[Coord]:
     return result
 
 
+def get_loop(insts: list[Instruction]) -> list[Heading]:
+    coord = Coord(0, 0)
+    loop: list[Heading] = []
+    for inst in insts:
+        for _ in range(inst.dist):
+            coord = coord.in_direction(inst.direction)
+            loop.append(Heading(coord, inst.direction))
+    return loop
+
+
+def sf(verticies: list[Coord]) -> int:
+    return [0 if a_vert.col == b_vert.col else ((a_vert.col - b_vert.col + 2) * (a_vert.line + b_vert.line))
+            for a_vert, b_vert in zip(verticies, verticies[1:])]
+
+def shoestring(verticies: list[Coord]) -> int:
+    vals = sf(verticies)
+    return abs(sum(vals)) // 2
+
+
+def get_verticies(insts: list[Instruction]) -> list[Coord]:
+    coord = Coord(0, 0)
+    verticies = [coord]
+    for inst in insts:
+        coord = coord.in_direction(inst.direction, inst.dist)
+        verticies.append(coord)
+    return verticies
+
+
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]:
     instructions = [
         Instruction.from_line(line) for line in input_file.read_text().splitlines()
     ]
-    coord = Coord(0, 0)
-    loop: list[Heading] = []
-    for inst in instructions:
-        for _ in range(inst.dist):
-            coord = coord.in_direction(inst.direction)
-            loop.append(Heading(coord, inst.direction))
+    p2_insts = [inst.p2_inst() for inst in instructions]
 
+    verticies = get_verticies(instructions)
+    loop = get_loop(instructions)
     enclosed = find_enclosed_ground(loop)
+    #p2_loop = get_loop(p2_insts)
     return (len(enclosed) + len(loop), None)
 
 
 if __name__ == "__main__":
-    utils.per_day_main(p1p2)
+    utils.per_day_main(p1p2, "example")
