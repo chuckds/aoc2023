@@ -18,9 +18,10 @@ class Direction(enum.Enum):
     WEST = (-1, 0)
     EAST = (1, 0)
 
-
-DIR_TO_OPPOSITE = {dir: Direction((dir.value[0] * -1, dir.value[1] * -1))
-                   for dir in Direction}
+DIR_TO_ORTHOG = {
+    dir: (Direction((-1 * dir.value[1], dir.value[0])), Direction((dir.value[1], -1 * dir.value[0])))
+    for dir in Direction
+}
 
 
 class Coord(NamedTuple):
@@ -57,10 +58,9 @@ def construct_city(grid: list[list[int]]) -> dict[Coord, CityBlock]:
     return city_blocks
 
 
-def min_heat_loss_cb(start: CityBlock, end: CityBlock, p2: bool) -> int:
-    to_check: list[tuple[int, tuple[CityBlock, int, Direction]]] = [
-        (0, (start, 0, Direction.SOUTH)),
-        (0, (start, 0, Direction.EAST))
+def min_heat_loss(start: CityBlock, end: CityBlock, p2: bool) -> int:
+    to_check: list[tuple[int, tuple[CityBlock, Direction]]] = [
+        (0, (start, a_dir)) for a_dir in (Direction.SOUTH, Direction.EAST)
     ]
     visited = set()
     while to_check:
@@ -68,30 +68,20 @@ def min_heat_loss_cb(start: CityBlock, end: CityBlock, p2: bool) -> int:
         if walk_state in visited:
             continue
         visited.add(walk_state)
-        block, num_straights, prev_dir = walk_state
+        block, prev_dir = walk_state
         if block is end:
             break
-        from_dir = DIR_TO_OPPOSITE[prev_dir]
-        for new_dir, new_block in block.connected.items():
-            if new_dir is from_dir:  # Can't go backwards
-                continue
-            if new_dir is prev_dir:  # Straight on
-                if num_straights >= (10 if p2 else 3):
-                    continue
-            elif p2 and num_straights <= 3:
-                continue
-            walk_state = (
-                new_block,
-                num_straights + 1 if new_dir is prev_dir else 1,
-                new_dir
-            )
-            if walk_state in visited:
-                continue
-            bisect.insort(
-                to_check,
-                (heat_loss - new_block.heat_loss, walk_state),
-                key=lambda x: x[0],
-            )
+        for new_dir in DIR_TO_ORTHOG[prev_dir]:
+            new_heat_loss, new_block = heat_loss, block
+            for num_straight in range(10 if p2 else 3):
+                if not (new_block := new_block.connected.get(new_dir)):  # type: ignore[assignment]
+                    break
+                new_heat_loss -= new_block.heat_loss
+                if not p2 or new_block == end or num_straight >= 3:
+                    walk_state = (new_block, new_dir)
+                    if walk_state in visited:
+                        continue
+                    bisect.insort(to_check, (new_heat_loss, walk_state), key=lambda x: x[0])
     return -1 * heat_loss
 
 
@@ -100,15 +90,14 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int, ...]:
         [int(char) for char in line]
         for line in input_file.read_text().splitlines()
     ]
-
     city_blocks = construct_city(grid)
     return tuple(
-        min_heat_loss_cb(city_blocks[Coord(0, 0)],
-                         city_blocks[Coord(len(grid[0]) - 1, len(grid[0]) - 1)],
-                         is_p2)
+        min_heat_loss(city_blocks[Coord(0, 0)],
+                      city_blocks[Coord(len(grid[0]) - 1, len(grid[0]) - 1)],
+                      is_p2)
         for is_p2 in (False, True)
     )
 
 
 if __name__ == "__main__":
-    utils.per_day_main(p1p2)
+    utils.per_day_main(p1p2, "")
