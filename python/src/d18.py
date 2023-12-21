@@ -150,12 +150,12 @@ def get_loop(insts: list[Instruction]) -> list[Heading]:
 
 
 def sf(verticies: list[Coord]) -> int:
-    return [0 if a_vert.col == b_vert.col else ((a_vert.col - b_vert.col + 2) * (a_vert.line + b_vert.line))
+    return [0 if a_vert.col == b_vert.col else ((a_vert.col - b_vert.col + 1) * (a_vert.line + 1))
             for a_vert, b_vert in zip(verticies, verticies[1:])]
 
 def shoestring(verticies: list[Coord]) -> int:
     vals = sf(verticies)
-    return abs(sum(vals)) // 2
+    return abs(sum(vals))
 
 
 def get_verticies(insts: list[Instruction]) -> list[Coord]:
@@ -174,6 +174,8 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
     p2_insts = [inst.p2_inst() for inst in instructions]
 
     verticies = get_verticies(instructions)
+    print(f"{shoestring([Coord(3, 1), Coord(3, 3), Coord(1, 3), Coord(1, 1)])=}")
+    print(f"{shoestring(verticies)=}")
     loop = get_loop(instructions)
     enclosed = find_enclosed_ground(loop)
     #p2_loop = get_loop(p2_insts)
