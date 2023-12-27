@@ -4,19 +4,27 @@ Advent Of Code 2023 Day 17
 
 from __future__ import annotations
 
-import bisect
 import enum
+import heapq
 from pathlib import Path
 from typing import NamedTuple
+from functools import total_ordering
 
 import utils
 
 
+@total_ordering
 class Direction(enum.Enum):
     NORTH = (0, -1)
     SOUTH = (0, 1)
     WEST = (-1, 0)
     EAST = (1, 0)
+
+    def __lt__(self, other: Direction) -> bool:
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
+
 
 DIR_TO_ORTHOG = {
     dir: (Direction((-1 * dir.value[1], dir.value[0])), Direction((dir.value[1], -1 * dir.value[0])))
@@ -62,9 +70,10 @@ def min_heat_loss(start: CityBlock, end: CityBlock, p2: bool) -> int:
     to_check: list[tuple[int, tuple[CityBlock, Direction]]] = [
         (0, (start, a_dir)) for a_dir in (Direction.SOUTH, Direction.EAST)
     ]
+    heapq.heapify(to_check)
     visited = set()
     while to_check:
-        heat_loss, walk_state = to_check.pop()
+        heat_loss, walk_state = heapq.heappop(to_check)
         if walk_state in visited:
             continue
         visited.add(walk_state)
@@ -76,13 +85,13 @@ def min_heat_loss(start: CityBlock, end: CityBlock, p2: bool) -> int:
             for num_straight in range(10 if p2 else 3):
                 if not (new_block := new_block.connected.get(new_dir)):  # type: ignore[assignment]
                     break  # Heading in this direction is out of bounds
-                new_heat_loss -= new_block.heat_loss
+                new_heat_loss += new_block.heat_loss
                 if not p2 or new_block == end or num_straight >= 3:
                     walk_state = (new_block, new_dir)
                     if walk_state in visited:
                         continue
-                    bisect.insort(to_check, (new_heat_loss, walk_state), key=lambda x: x[0])
-    return -1 * heat_loss
+                    heapq.heappush(to_check, (new_heat_loss, walk_state))
+    return heat_loss
 
 
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int, ...]:
