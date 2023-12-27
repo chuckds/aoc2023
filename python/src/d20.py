@@ -24,8 +24,10 @@ class Module:
     name: str
     connections: tuple[str, ...]
     mod_type: str
+    last_pulse: None | bool
 
     def get_pulses(self, is_high: bool) -> list[Pulse]:
+        self.last_pulse = is_high
         return [Pulse(is_high, self.name, conn) for conn in self.connections]
 
     def add_connection_from(self, from_module: str) -> None:
@@ -67,15 +69,19 @@ def mod_from_line(line: str) -> Module:
         mod_type, name = tname[0], tname[1:]
     else:
         mod_type, name = "", tname
-    return TYPE_TO_CLASS[mod_type](name, tuple(conns.split(", ")), mod_type)
+    return TYPE_TO_CLASS[mod_type](name, tuple(conns.split(", ")), mod_type, None)
 
 
-def press_button(modules: dict[str, Module]) -> tuple[int, int] | None:
+def press_button(modules: dict[str, Module], button_press: int, mods_last_high: dict[str, int], mod_periods: dict[str, int]) -> tuple[int, int] | None:
     low_pulses = high_pulses = 0
     pulses = deque([Pulse(False, "button", "broadcaster")])
     while pulses:
         pulse = pulses.popleft()
         if pulse.is_high:
+            if (last_high := mods_last_high.get(pulse.from_module)) is not None:
+                if last_high > 0:
+                    mod_periods[pulse.from_module] = button_press - last_high
+                mods_last_high[pulse.from_module] = button_press
             high_pulses += 1
         else:
             low_pulses += 1
@@ -99,22 +105,22 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
             if conn_mod := modules.get(conn):
                 conn_mod.add_connection_from(mod.name)
             elif conn == "rx":
-                outputs_to_rx = mod
+                outputs_to_rx = mod.name
+
+    # Track when a high pulse is sent to the module that is connected to rx
+    mods_last_high = {mod.name: 0 for mod in modules.values() if outputs_to_rx in mod.connections}
+    mod_periods: dict[str, int] = {}
 
     pulse_counts: tuple[int, ...] = (0, 0)
-    for button_presses in range(1000):
-        pulse_counts = tuple(a + b for a, b in zip(press_button(modules), pulse_counts))  # type: ignore[arg-type]
+    for button_press in range(1000):
+        pulse_counts = tuple(a + b for a, b in zip(press_button(modules, button_press, mods_last_high, mod_periods), pulse_counts))  # type: ignore[arg-type]
 
-    if outputs_to_rx and False:
-        one_step_out = {mod.name: [] for mod in modules.values() if outputs_to_rx.name in mod.connections}
-        while pulse_counts is not None:
-            button_presses += 1
-            pulse_counts = press_button(modules)
-            for mod_name, presses_ping_low in one_step_out.items():
-                mod = modules[mod_name]
-                if all(mod.prev_pulse.values()):
-                    presses_ping_low.append(button_presses)
-    return (math.prod(pulse_counts), button_presses + 1)
+    if outputs_to_rx:
+        while len(mod_periods) != len(mods_last_high):  # Loop until we have the periods of all the outputs
+            button_press += 1
+            press_button(modules, button_press, mods_last_high, mod_periods)
+
+    return (math.prod(pulse_counts), math.lcm(*mod_periods.values()))
 
 
 if __name__ == "__main__":
