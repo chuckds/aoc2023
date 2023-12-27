@@ -67,8 +67,7 @@ def parse(input_file: Path) -> tuple[dict[str, set[Coord]], int]:
 
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]:
     rocks, size = parse(input_file)
-    new_rounds = tilt(Direction.NORTH, size, rocks["O"], rocks["#"])
-    p1 = get_north_load(new_rounds)
+    rounds_after_tilt = tilt(Direction.NORTH, size, rocks["O"], rocks["#"])
 
     rounds = rocks["O"]
     f_rounds = frozenset(rounds)
@@ -84,7 +83,8 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
     final_config = next(rounds for rounds, idx in seen_configs.items()
                         if idx == part_loop + loop_rejoin)
 
-    return (p1, get_north_load(final_config))
+    return (get_north_load(rounds_after_tilt),
+            get_north_load(final_config))
 
 
 if __name__ == "__main__":
