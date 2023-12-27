@@ -52,8 +52,7 @@ class Conjunction(Module):
 
     def proc_pulse(self, pulse: Pulse) -> list[Pulse]:
         self.prev_pulse[pulse.from_module] = pulse.is_high
-        high_pulse = not all(self.prev_pulse.values())
-        return self.get_pulses(is_high=high_pulse)
+        return self.get_pulses(is_high=not all(self.prev_pulse.values()))
 
     def add_connection_from(self, from_module: str) -> None:
         self.prev_pulse[from_module] = False
@@ -83,7 +82,8 @@ def press_button(modules: dict[str, Module]) -> tuple[int, int] | None:
             if pulse.to_module == "rx":
                 return None
         if dest_mod := modules.get(pulse.to_module):
-            pulses.extend(dest_mod.proc_pulse(pulse))
+            next_pulses = dest_mod.proc_pulse(pulse)
+            pulses.extend(next_pulses)
     return low_pulses, high_pulses
 
 
@@ -93,21 +93,27 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
         for line in input_file.read_text().splitlines()
     }
 
-    do_p2 = False
+    outputs_to_rx = None
     for mod in modules.values():
         for conn in mod.connections:
             if conn_mod := modules.get(conn):
                 conn_mod.add_connection_from(mod.name)
             elif conn == "rx":
-                do_p2 = True
+                outputs_to_rx = mod
 
     pulse_counts: tuple[int, ...] = (0, 0)
     for button_presses in range(1000):
         pulse_counts = tuple(a + b for a, b in zip(press_button(modules), pulse_counts))  # type: ignore[arg-type]
-    if do_p2 and False:
+
+    if outputs_to_rx and False:
+        one_step_out = {mod.name: [] for mod in modules.values() if outputs_to_rx.name in mod.connections}
         while pulse_counts is not None:
             button_presses += 1
             pulse_counts = press_button(modules)
+            for mod_name, presses_ping_low in one_step_out.items():
+                mod = modules[mod_name]
+                if all(mod.prev_pulse.values()):
+                    presses_ping_low.append(button_presses)
     return (math.prod(pulse_counts), button_presses + 1)
 
 
