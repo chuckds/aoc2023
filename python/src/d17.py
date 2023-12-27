@@ -42,11 +42,11 @@ class CityBlock(NamedTuple):
 
 
 def construct_city(grid: list[list[int]]) -> dict[Coord, CityBlock]:
-    city_blocks: dict[Coord, CityBlock] = {}
-    for line_idx, line in enumerate(grid):
-        for col_idx, heat_loss in enumerate(line):
-            location = Coord(col_idx, line_idx)
-            city_blocks[location] = CityBlock(location, heat_loss, {})
+    city_blocks: dict[Coord, CityBlock] = {
+        (location := Coord(col_idx, line_idx)): CityBlock(location, heat_loss, {})
+        for line_idx, line in enumerate(grid)
+        for col_idx, heat_loss in enumerate(line)
+    }
 
     for location, city_block in city_blocks.items():
         for in_dir in Direction:
@@ -75,7 +75,7 @@ def min_heat_loss(start: CityBlock, end: CityBlock, p2: bool) -> int:
             new_heat_loss, new_block = heat_loss, block
             for num_straight in range(10 if p2 else 3):
                 if not (new_block := new_block.connected.get(new_dir)):  # type: ignore[assignment]
-                    break
+                    break  # Heading in this direction is out of bounds
                 new_heat_loss -= new_block.heat_loss
                 if not p2 or new_block == end or num_straight >= 3:
                     walk_state = (new_block, new_dir)
