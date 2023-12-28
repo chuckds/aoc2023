@@ -24,8 +24,10 @@ class Coord(NamedTuple):
     line: int
 
     def in_direction(self, direction: Direction, scale: int = 1) -> Coord:
-        return Coord(self.col + direction.value[0] * scale,
-                     self.line + direction.value[1] * scale)
+        return Coord(
+            self.col + direction.value[0] * scale,
+            self.line + direction.value[1] * scale,
+        )
 
 
 INST_TO_DIR = {
@@ -43,13 +45,16 @@ P2_INST_TO_DIR = {
     "0": Direction.EAST,
 }
 
+
 class Instruction(NamedTuple):
     direction: Direction
     dist: int
     colour: str
 
     def p2_inst(self) -> Instruction:
-        return Instruction(P2_INST_TO_DIR[self.colour[-1]], int(self.colour[:5], 16), "")
+        return Instruction(
+            P2_INST_TO_DIR[self.colour[-1]], int(self.colour[:5], 16), ""
+        )
 
     @classmethod
     def from_line(cls, line: str) -> Instruction:
@@ -58,14 +63,18 @@ class Instruction(NamedTuple):
 
 
 def showlace(verticies: list[Coord], perimeter: int) -> int:
-    vals = ((b_vert.col - a_vert.col) * (a_vert.line)
-            for a_vert, b_vert in pairwise(verticies))
+    vals = (
+        (b_vert.col - a_vert.col) * (a_vert.line)
+        for a_vert, b_vert in pairwise(verticies)
+    )
     return int(abs(sum(vals)) - 0.5 * perimeter + 1) + perimeter
 
 
 def get_verticies(insts: list[Instruction]) -> list[Coord]:
     coord = Coord(0, 0)
-    return [coord] + [coord := coord.in_direction(inst.direction, inst.dist) for inst in insts]
+    return [coord] + [
+        coord := coord.in_direction(inst.direction, inst.dist) for inst in insts
+    ]
 
 
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]:
@@ -75,7 +84,9 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
     p2_instructions = [inst.p2_inst() for inst in instructions]
     return (
         showlace(get_verticies(instructions), sum(inst.dist for inst in instructions)),
-        showlace(get_verticies(p2_instructions), sum(inst.dist for inst in p2_instructions)),
+        showlace(
+            get_verticies(p2_instructions), sum(inst.dist for inst in p2_instructions)
+        ),
     )
 
 
