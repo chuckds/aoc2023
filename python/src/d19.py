@@ -32,7 +32,9 @@ class PartRange(NamedTuple):
     a: tuple[int, int] = (0, 0)
     s: tuple[int, int] = (0, 0)
 
-    def apply_limit(self, lim_idx: int, op: str, val: int, res: bool) -> PartRange | None:
+    def apply_limit(
+        self, lim_idx: int, op: str, val: int, res: bool
+    ) -> PartRange | None:
         if (op == "<" and res) or (op == ">" and not res):
             upper_bound = val if op == ">" else (val - 1)
             new_lim = (self[lim_idx][0], min(upper_bound, self[lim_idx][1]))
@@ -94,13 +96,17 @@ class Workflow(NamedTuple):
         else:
             return result == "A"
 
-    def accepted_ranges(self, pv: PartRange, workflows: dict[str, Workflow]) -> list[PartRange]:
+    def accepted_ranges(
+        self, pv: PartRange, workflows: dict[str, Workflow]
+    ) -> list[PartRange]:
         accepted_pvs = []
         for condition in self.conditions:
             true_pv, next_pv = condition.split_pv(pv)
             if true_pv:
                 if next_workflow := workflows.get(condition.result):
-                    accepted_pvs.extend(next_workflow.accepted_ranges(true_pv, workflows))
+                    accepted_pvs.extend(
+                        next_workflow.accepted_ranges(true_pv, workflows)
+                    )
                 elif condition.result == "A":
                     accepted_pvs.append(true_pv)
             if not next_pv:

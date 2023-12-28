@@ -6,9 +6,9 @@ from __future__ import annotations
 
 import enum
 import heapq
+from functools import total_ordering
 from pathlib import Path
 from typing import NamedTuple
-from functools import total_ordering
 
 import utils
 
@@ -27,7 +27,10 @@ class Direction(enum.Enum):
 
 
 DIR_TO_ORTHOG = {
-    dir: (Direction((-1 * dir.value[1], dir.value[0])), Direction((dir.value[1], -1 * dir.value[0])))
+    dir: (
+        Direction((-1 * dir.value[1], dir.value[0])),
+        Direction((dir.value[1], -1 * dir.value[0])),
+    )
     for dir in Direction
 }
 
@@ -96,14 +99,15 @@ def min_heat_loss(start: CityBlock, end: CityBlock, p2: bool) -> int:
 
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int, ...]:
     grid = [
-        [int(char) for char in line]
-        for line in input_file.read_text().splitlines()
+        [int(char) for char in line] for line in input_file.read_text().splitlines()
     ]
     city_blocks = construct_city(grid)
     return tuple(
-        min_heat_loss(city_blocks[Coord(0, 0)],
-                      city_blocks[Coord(len(grid[0]) - 1, len(grid[0]) - 1)],
-                      is_p2)
+        min_heat_loss(
+            city_blocks[Coord(0, 0)],
+            city_blocks[Coord(len(grid[0]) - 1, len(grid[0]) - 1)],
+            is_p2,
+        )
         for is_p2 in (False, True)
     )
 

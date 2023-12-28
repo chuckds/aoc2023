@@ -35,20 +35,26 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
     for pattern in patterns:
         for dim, factor in ((pattern.rows, 100), (pattern.cols, 1)):
             for mirror_idx in range(1, len(dim)):
-                diffs = [(b4_idx, after_idx) for (b4_idx, b4), (after_idx, after) in
-                       zip(
-                           ((idx, dim[idx]) for idx in range(mirror_idx - 1, -1, -1)),
-                           ((idx, dim[idx]) for idx in range(mirror_idx, len(dim)))
-                       ) if b4 != after
+                diffs = [
+                    (b4_idx, after_idx)
+                    for (b4_idx, b4), (after_idx, after) in zip(
+                        ((idx, dim[idx]) for idx in range(mirror_idx - 1, -1, -1)),
+                        ((idx, dim[idx]) for idx in range(mirror_idx, len(dim))),
+                    )
+                    if b4 != after
                 ]
                 if len(diffs) == 0:  # Found the reflection
                     p1 += mirror_idx * factor
                 elif len(diffs) == 1:
                     # Only one row/column doesn't match check if only one char
                     # is wrong - if so it is the smudge
-                    chars_diff = sum(1 for b4_char, after_char
-                                     in zip(dim[diffs[0][0]], dim[diffs[0][1]])
-                                     if b4_char != after_char)
+                    chars_diff = sum(
+                        1
+                        for b4_char, after_char in zip(
+                            dim[diffs[0][0]], dim[diffs[0][1]]
+                        )
+                        if b4_char != after_char
+                    )
                     if chars_diff == 1:
                         p2 += mirror_idx * factor
 

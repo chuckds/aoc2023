@@ -11,7 +11,9 @@ from typing import NamedTuple, Sequence
 import utils
 
 
-def consume_groups(line: str, num_damaged_to_add: int, exp_dam_groups: Sequence[int]) -> tuple[int, int, int] | None:
+def consume_groups(
+    line: str, num_damaged_to_add: int, exp_dam_groups: Sequence[int]
+) -> tuple[int, int, int] | None:
     """No ? in line"""
     group_len_idx = 0
     next_dam_group_len = exp_dam_groups[group_len_idx] if exp_dam_groups else -1
@@ -39,7 +41,11 @@ def consume_groups(line: str, num_damaged_to_add: int, exp_dam_groups: Sequence[
             if curr_dam_group_len:  # End of a group
                 if curr_dam_group_len == next_dam_group_len:
                     group_len_idx += 1
-                    next_dam_group_len = exp_dam_groups[group_len_idx] if group_len_idx < len(exp_dam_groups) else -1
+                    next_dam_group_len = (
+                        exp_dam_groups[group_len_idx]
+                        if group_len_idx < len(exp_dam_groups)
+                        else -1
+                    )
                     curr_dam_group_len = 0
                 else:  # Run of brokens is too short, doesn't match
                     return None
@@ -61,13 +67,21 @@ def spring_line_variations(
         idx_at, num_damaged_to_add, groups_consumed = consume_res
         if idx_at >= 0:
             # Hit a "?" that could be either
-            line_left = line[idx_at + 1:]
-            min_required_len = num_damaged_to_add + len(exp_dam_groups) - groups_consumed - 1
+            line_left = line[idx_at + 1 :]
+            min_required_len = (
+                num_damaged_to_add + len(exp_dam_groups) - groups_consumed - 1
+            )
             if min_required_len <= len(line_left):
-                as_gap = spring_line_variations(line_left, num_damaged_to_add, exp_dam_groups[groups_consumed:])
+                as_gap = spring_line_variations(
+                    line_left, num_damaged_to_add, exp_dam_groups[groups_consumed:]
+                )
             else:
                 as_gap = 0
-            as_broken = spring_line_variations("#" + line_left, num_damaged_to_add - 1, exp_dam_groups[groups_consumed:])
+            as_broken = spring_line_variations(
+                "#" + line_left,
+                num_damaged_to_add - 1,
+                exp_dam_groups[groups_consumed:],
+            )
             return as_gap + as_broken
         else:
             if num_damaged_to_add == 0:  # All good!
@@ -94,7 +108,7 @@ class SpringLine(NamedTuple):
         return spring_line_variations(
             self.line,
             sum(self.damaged_groups) - sum(1 for char in self.line if char == "#"),
-            self.damaged_groups
+            self.damaged_groups,
         )
 
 
@@ -104,11 +118,12 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
         for line in input_file.read_text().splitlines()
     )
     spring_rows2 = (
-        SpringLine.from_p2_line(line)
-        for line in input_file.read_text().splitlines()
+        SpringLine.from_p2_line(line) for line in input_file.read_text().splitlines()
     )
-    return (sum(spring_row.get_num_arrangements() for spring_row in spring_rows),
-            sum(spring_row.get_num_arrangements() for spring_row in spring_rows2))
+    return (
+        sum(spring_row.get_num_arrangements() for spring_row in spring_rows),
+        sum(spring_row.get_num_arrangements() for spring_row in spring_rows2),
+    )
 
 
 if __name__ == "__main__":

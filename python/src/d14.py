@@ -10,7 +10,6 @@ from typing import Iterable, NamedTuple
 
 import utils
 
-
 p2_cycles = 1_000_000_000
 
 
@@ -36,7 +35,9 @@ def get_north_load(rounds: Iterable[Coord]) -> int:
     return sum(1 + round[1] for round in rounds)
 
 
-def tilt(tilt_dir: Direction, size: int, rounds: set[Coord], squares: set[Coord]) -> set[Coord]:
+def tilt(
+    tilt_dir: Direction, size: int, rounds: set[Coord], squares: set[Coord]
+) -> set[Coord]:
     move_dir = tilt_dir.opposite()
     new_rounds = set()
     for dim_idx in range(size):
@@ -80,11 +81,11 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
 
     loop_len = len(seen_configs) - loop_rejoin
     part_loop = (p2_cycles - loop_rejoin) % loop_len
-    final_config = next(rounds for rounds, idx in seen_configs.items()
-                        if idx == part_loop + loop_rejoin)
+    final_config = next(
+        rounds for rounds, idx in seen_configs.items() if idx == part_loop + loop_rejoin
+    )
 
-    return (get_north_load(rounds_after_tilt),
-            get_north_load(final_config))
+    return (get_north_load(rounds_after_tilt), get_north_load(final_config))
 
 
 if __name__ == "__main__":

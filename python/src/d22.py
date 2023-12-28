@@ -5,7 +5,7 @@ Advent Of Code 2023 Day 22
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Generator, NamedTuple, Iterable
+from typing import Generator, Iterable, NamedTuple
 
 import utils
 
@@ -32,12 +32,16 @@ class Brick(NamedTuple):
     enda: Coord
     endb: Coord
 
-    def squares(self, num_z_planes: int = -1) -> Generator[tuple[int, XYCoord], None, None]:
+    def squares(
+        self, num_z_planes: int = -1
+    ) -> Generator[tuple[int, XYCoord], None, None]:
         square = self.enda
         yield 0, square.to_xy()
         direction = Coord._make(b - a for a, b in zip(self.enda, self.endb))
         while square != self.endb:
-            square = Coord._make(sd + dir // max(direction) for sd, dir in zip(square, direction))
+            square = Coord._make(
+                sd + dir // max(direction) for sd, dir in zip(square, direction)
+            )
             if num_z_planes == -1 or square.z - self.enda.z + 1 <= num_z_planes:
                 yield square.z - self.enda.z, square.to_xy()
             else:
@@ -50,14 +54,18 @@ class Brick(NamedTuple):
 
 
 def what_falls_if_removed(
-        brick_to_remove: Brick, brick_to_bricks_above: dict[Brick, set[Brick]], brick_to_bricks_below: dict[Brick, set[Brick]]
+    brick_to_remove: Brick,
+    brick_to_bricks_above: dict[Brick, set[Brick]],
+    brick_to_bricks_below: dict[Brick, set[Brick]],
 ) -> set[Brick]:
     removed_brick = {brick_to_remove}
     gone_bricks = {brick_to_remove}
     falling_bricks: set[Brick] = set()
     while gone_bricks:
         for dependent_brick in brick_to_bricks_above.get(gone_bricks.pop(), set()):
-            if not (brick_to_bricks_below[dependent_brick] - falling_bricks - removed_brick):  # Nothing left to support it
+            if not (
+                brick_to_bricks_below[dependent_brick] - falling_bricks - removed_brick
+            ):  # Nothing left to support it
                 gone_bricks.add(dependent_brick)
                 falling_bricks.add(dependent_brick)
 
@@ -83,14 +91,13 @@ def get_what_rests_on(bricks: Iterable[Brick]) -> dict[Brick, set[Brick]]:
 
 
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]:
-    bricks = [
-        Brick.from_line(line)
-        for line in input_file.read_text().splitlines()
-    ]
+    bricks = [Brick.from_line(line) for line in input_file.read_text().splitlines()]
 
     brick_to_bricks_below = get_what_rests_on(bricks)
     critical_bricks = {
-        next(iter(ontop_of)) for _, ontop_of in brick_to_bricks_below.items() if len(ontop_of) == 1
+        next(iter(ontop_of))
+        for _, ontop_of in brick_to_bricks_below.items()
+        if len(ontop_of) == 1
     }
     disintegratable = set(bricks) - critical_bricks
 
@@ -100,7 +107,9 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
             brick_to_bricks_above.setdefault(brick_beneath, set()).add(brick)
 
     brick_to_num_fall: dict[Brick, int] = {
-        brick: len(what_falls_if_removed(brick, brick_to_bricks_above, brick_to_bricks_below))
+        brick: len(
+            what_falls_if_removed(brick, brick_to_bricks_above, brick_to_bricks_below)
+        )
         for brick in bricks
     }
 

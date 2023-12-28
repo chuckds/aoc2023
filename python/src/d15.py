@@ -42,14 +42,20 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
             box_num = hash(label)
             old_lens = box_to_labels.get(box_num, {}).get(label)
             if old_lens is None:
-                box_to_labels.setdefault(box_num, {})[label] = Lens(label, box_num, step_idx, focal_length)
+                box_to_labels.setdefault(box_num, {})[label] = Lens(
+                    label, box_num, step_idx, focal_length
+                )
             else:
-                box_to_labels[box_num][label] = Lens(label, box_num, old_lens.at_step, focal_length)
+                box_to_labels[box_num][label] = Lens(
+                    label, box_num, old_lens.at_step, focal_length
+                )
 
     focussing_power = (
         (1 + box_num) * lens.focal_length * (lens_idx + 1)
         for box_num, lenses in box_to_labels.items()
-        for lens_idx, lens in enumerate(sorted(lenses.values(), key=lambda lens: lens.at_step))
+        for lens_idx, lens in enumerate(
+            sorted(lenses.values(), key=lambda lens: lens.at_step)
+        )
     )
 
     return (sum(hashes), sum(focussing_power))

@@ -19,10 +19,8 @@ class Direction(enum.Enum):
     EAST = (1, 0)
 
 
-DIR_TO_LEFT = {dir: Direction((-1 * dir.value[1], dir.value[0]))
-               for dir in Direction}
-DIR_TO_RIGHT = {dir: Direction((dir.value[1], -1 * dir.value[0]))
-                for dir in Direction}
+DIR_TO_LEFT = {dir: Direction((-1 * dir.value[1], dir.value[0])) for dir in Direction}
+DIR_TO_RIGHT = {dir: Direction((dir.value[1], -1 * dir.value[0])) for dir in Direction}
 
 
 class Coord(NamedTuple):
@@ -42,8 +40,7 @@ class MirrorGrid:
         return 0 <= a_coord[0] < self.size and 0 <= a_coord[1] < self.size
 
 
-def light_beam(location: Coord, in_dir: Direction,
-               mirror_grid: MirrorGrid) -> int:
+def light_beam(location: Coord, in_dir: Direction, mirror_grid: MirrorGrid) -> int:
     to_check = set([(location, in_dir)])
     seen = set()
     energized = set()
@@ -67,9 +64,17 @@ def light_beam(location: Coord, in_dir: Direction,
                 else:
                     new_dirs = (in_dir,)
             elif char == "\\":
-                new_dirs = (DIR_TO_RIGHT[in_dir] if in_dir in (Direction.WEST, Direction.EAST) else DIR_TO_LEFT[in_dir],)
+                new_dirs = (
+                    DIR_TO_RIGHT[in_dir]
+                    if in_dir in (Direction.WEST, Direction.EAST)
+                    else DIR_TO_LEFT[in_dir],
+                )
             elif char == "/":
-                new_dirs = (DIR_TO_LEFT[in_dir] if in_dir in (Direction.WEST, Direction.EAST) else DIR_TO_RIGHT[in_dir],)
+                new_dirs = (
+                    DIR_TO_LEFT[in_dir]
+                    if in_dir in (Direction.WEST, Direction.EAST)
+                    else DIR_TO_RIGHT[in_dir],
+                )
         else:
             new_dirs = (in_dir,)
         for new_dir in new_dirs:
@@ -95,9 +100,13 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]
     for x in range(mirror_grid.size):
         poss.append(light_beam(Coord(x, 0), Direction.NORTH, mirror_grid))
     for x in range(mirror_grid.size):
-        poss.append(light_beam(Coord(mirror_grid.size - 1, x), Direction.WEST, mirror_grid))
+        poss.append(
+            light_beam(Coord(mirror_grid.size - 1, x), Direction.WEST, mirror_grid)
+        )
     for x in range(mirror_grid.size):
-        poss.append(light_beam(Coord(x, mirror_grid.size - 1), Direction.SOUTH, mirror_grid))
+        poss.append(
+            light_beam(Coord(x, mirror_grid.size - 1), Direction.SOUTH, mirror_grid)
+        )
 
     return (p1, max(poss))
 

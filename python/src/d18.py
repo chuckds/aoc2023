@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import enum
 from pathlib import Path
-from typing import Generator, NamedTuple, Iterable
+from typing import Generator, Iterable, NamedTuple
 
 import utils
 
@@ -67,8 +67,8 @@ def print_points(points: Iterable[Coord], char: str = "#") -> None:
     max_line = max(c.line for c in points)
     min_col = min(c.col for c in points)
     for line in range(max_line, min_line - 1, -1):
-        #line_min_col = min(c.col for c in points if c.line == line)
-        #print(" " * (line_min_col - min_col), end="")
+        # line_min_col = min(c.col for c in points if c.line == line)
+        # print(" " * (line_min_col - min_col), end="")
         for col in range(min_col, max(c.col for c in points if c.line == line) + 1):
             pchar = char if Coord(col, line) in points else " "
             print(pchar, end="")
@@ -101,7 +101,9 @@ def find_enclosed_ground(trench_loop: list[Heading]) -> set[Coord]:
             right_trench.add(right_spot)
         straight_on = loop_head.loc.in_direction(loop_head.direction)
         if straight_on not in loop_locs:
-            if left_spot == trench_loop[(loop_idx + 1) % len(trench_loop)].loc:  # Going left
+            if (
+                left_spot == trench_loop[(loop_idx + 1) % len(trench_loop)].loc
+            ):  # Going left
                 right_trench.add(straight_on)
             else:  # Not going straight on or left, can't go backwards so must be right
                 left_trench.add(straight_on)
@@ -113,9 +115,9 @@ def find_enclosed_ground(trench_loop: list[Heading]) -> set[Coord]:
         result = left_trench
     else:
         result = right_trench
-    #print_points(loop_locs)
-    #print("-"*10)
-    #print_points(result)
+    # print_points(loop_locs)
+    # print("-"*10)
+    # print_points(result)
     # Expand the set to include any ground that wasn't adjacent to the pipe loop
     to_scan = set(result)
     while to_scan:
@@ -128,8 +130,9 @@ def find_enclosed_ground(trench_loop: list[Heading]) -> set[Coord]:
 
 
 def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, int | None]:
-    instructions = [Instruction.from_line(line)
-                    for line in input_file.read_text().splitlines()]
+    instructions = [
+        Instruction.from_line(line) for line in input_file.read_text().splitlines()
+    ]
     coord = Coord(0, 0)
     loop: list[Heading] = []
     for inst in instructions:

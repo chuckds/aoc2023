@@ -45,22 +45,28 @@ def get_infini_reachable(
         for loc in step_from:
             for new_loc in loc.adjacent():
                 mod_grid_loc = Coord(new_loc.col % size, new_loc.line % size)
-                if (mod_grid_loc in gardens and
-                    new_loc not in reachable.setdefault(grid := grid_coord(new_loc, size), {}).setdefault((step + 1) % 2, set())
-                ):
+                if mod_grid_loc in gardens and new_loc not in reachable.setdefault(
+                    grid := grid_coord(new_loc, size), {}
+                ).setdefault((step + 1) % 2, set()):
                     new_step_starts.add(new_loc)
                     reachable[grid][(step + 1) % 2].add(mod_grid_loc)
-                    #if reachable[grid] == max_reachable:
+                    # if reachable[grid] == max_reachable:
                     #    complete_grids.add(grid)
         if (step + 1) in num_steps:
-            answers.append(sum(len(grid_reach[(step + 1) % 2]) for grid_reach in reachable.values()))
+            answers.append(
+                sum(
+                    len(grid_reach[(step + 1) % 2]) for grid_reach in reachable.values()
+                )
+            )
         step_from = new_step_starts
-    #grids_like_start = [abs(grid.col) + abs(grid.line) for grid in complete_grids if reachable[grid][0] == reachable[Coord(0, 0)][0]]
-    #grids_start_flip = [abs(grid.col) + abs(grid.line) for grid in complete_grids if reachable[grid][1] == reachable[Coord(0, 0)][0]]
+    # grids_like_start = [abs(grid.col) + abs(grid.line) for grid in complete_grids if reachable[grid][0] == reachable[Coord(0, 0)][0]]
+    # grids_start_flip = [abs(grid.col) + abs(grid.line) for grid in complete_grids if reachable[grid][1] == reachable[Coord(0, 0)][0]]
     return answers
 
 
-def get_max_reachable(gardens: set[Coord], start: Coord) -> tuple[dict[int, dict[Coord, int]], int]:
+def get_max_reachable(
+    gardens: set[Coord], start: Coord
+) -> tuple[dict[int, dict[Coord, int]], int]:
     step_from = set([start])
     reachable: dict[int, dict[Coord, int]] = {0: {start: 0}, 1: {}}
     step = 0
@@ -92,6 +98,7 @@ def get_reachable(gardens: set[Coord], start: Coord, num_steps: int) -> int:
 
 def parse_garden(lines: list[str]) -> tuple[Coord, set[Coord], int]:
     starts = []
+
     def start_char(col: int, line: int) -> Coord:
         starts.append(Coord(col, line))
         return starts[0]
@@ -105,7 +112,9 @@ def parse_garden(lines: list[str]) -> tuple[Coord, set[Coord], int]:
     return starts[0], gardens, len(lines)
 
 
-def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, tuple[int, ...] | None]:
+def p1p2(
+    input_file: Path = utils.real_input(),
+) -> tuple[int | None, tuple[int, ...] | None]:
     is_example = "example" in str(input_file)
     start, gardens, size = parse_garden(input_file.read_text().splitlines())
 
@@ -113,13 +122,13 @@ def p1p2(input_file: Path = utils.real_input()) -> tuple[int | None, tuple[int, 
     if is_example:
         p2s = tuple(
             get_infini_reachable(gardens, start, (6, 10, 50), size)
-            #get_infini_reachable(gardens, start, (6, 10, 50, 100, 500, 1000, 5000), size)
+            # get_infini_reachable(gardens, start, (6, 10, 50, 100, 500, 1000, 5000), size)
         )
     else:
         p2s = tuple(get_infini_reachable(gardens, start, (200,), size))
-        #p2s = tuple(get_infini_reachable(gardens, start, (26501365,), size))
+        # p2s = tuple(get_infini_reachable(gardens, start, (26501365,), size))
     return (get_reachable(gardens, start, 6 if is_example else 64), p2s)
 
 
 if __name__ == "__main__":
-    utils.per_day_main(p1p2, "real")
+    utils.per_day_main(p1p2, "example")
